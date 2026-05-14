@@ -2,13 +2,16 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView } from 
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Katex from 'react-native-katex';
-import rawData from "../../assets/questions/algebra/exponents/manipulation.json" with {type: 'json'};
+import rawData from "../../assets/questions/algebra/exponents/expansion.json" with {type: 'json'};
 
 interface Equation {
   eq: string;
   level: string;
+  technique: string;
+  description: string;
+  answer: string;
 }
 
 interface EquationSet { 
@@ -16,58 +19,134 @@ interface EquationSet {
 }
 
 export default function Algebra() {
-  const [latex, setLatex] = useState<string>('x^2');
+  const [latex, setLatex] = useState<string>('');
   const equations: EquationSet = rawData as EquationSet;
-  const handleInputChange = (text: string): void => {
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [showAnswer, setShowAnswer] = useState<boolean>(false);
+
+  const handleInputChange = useCallback((text: string): void => {
     setLatex(text);
-  };
+  }, []);
+
+  const checkAnswer = useCallback((): void => {
+    // Compare normalized strings (remove whitespace)
+    const userAnswer = latex.replace(/\s/g, '');
+    const correctAnswer = equations.equations[currentIndex].answer.replace(/\s/g, '');
+    
+    if (userAnswer === correctAnswer) {
+      alert('Correct! 🎉');
+    } else {
+      alert(`Incorrect. The correct answer is: ${equations.equations[currentIndex].answer}`);
+      setShowAnswer(true);
+    }
+  }, [latex, currentIndex, equations]);
+
+  const showCorrectAnswer = useCallback((): void => {
+    setShowAnswer(true);
+  }, []);
+
+  const handleNextQuestion = useCallback((): void => {
+    if (currentIndex + 1 < equations.equations.length) {
+      setCurrentIndex(currentIndex + 1);
+      setLatex('');
+      setShowAnswer(false);
+    } else {
+      alert('Congratulations! You\'ve completed all questions!');
+      router.back();
+    }
+  }, [currentIndex, equations]);
 
   return (
     <LinearGradient colors={['#FDF5E6', '#F5E6D3']} style={styles.gradient}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>Algebra</Text>
-          <Katex style={styles.questionsField} 
-              expression={equations.equations[1].eq}
-              displayMode={false}
-              >
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Algebra</Text>
+            <View style={styles.placeholder} />
+          </View>
 
-          </Katex>
-          {/* Natural-looking math input area */}
-          <View style={styles.mathInputContainer}>
-            <Text style={styles.mathLabel}>Enter your math expression:</Text>
+          {/* Question Card */}
+          <View style={styles.questionCard}>
+            <View style={styles.questionHeader}>
+              <View style={styles.levelBadge}>
+                <Text style={styles.levelText}>{equations.equations[currentIndex].level}</Text>
+              </View>
+              <Text style={styles.techniqueText}>{equations.equations[currentIndex].technique}</Text>
+            </View>
             
-            {/* Editable input field */}
+            <Text style={styles.descriptionText}>{equations.equations[currentIndex].description}</Text>
+            
+            <View style={styles.equationContainer}>
+              <Katex 
+                expression={equations.equations[currentIndex].eq}
+                displayMode={true}
+              />
+            </View>
+          </View>
+
+          {/* Answer Section Card */}
+          <View style={styles.answerCard}>
+            <Text style={styles.sectionTitle}>Your Answer</Text>
+            
             <TextInput
               style={styles.mathInput}
               value={latex}
               onChangeText={handleInputChange}
-              placeholder="Type math here... (x^2, \sqrt{x}, \frac{1}{2})"
+              placeholder="Enter your answer here... (e.g., x^2, \sqrt{x}, \frac{1}{2})"
               placeholderTextColor="#999"
               autoFocus={true}
               multiline
             />
             
-            {/* Rendered math preview with KaTeX */}
-            <View style={styles.mathPreview}>
-              <Text style={styles.previewLabel}>Preview:</Text>
-              <View style={styles.katexContainer}>
-                <Katex
-                  expression={latex}
-                  displayMode={true}
-                  throwOnError={false}
-                  errorColor="#cc0000"
-                />
+            {/* Live Preview */}
+            {latex ? (
+              <View style={styles.previewContainer}>
+                <Text style={styles.previewLabel}>Preview:</Text>
+                <View style={styles.katexContainer}>
+                  <Katex
+                    expression={latex}
+                    displayMode={true}
+                    throwOnError={false}
+                    errorColor="#cc0000"
+                  />
+                </View>
               </View>
+            ) : null}
+
+            {/* Answer Display */}
+            {showAnswer && (
+              <View style={styles.answerDisplayContainer}>
+                <Text style={styles.answerDisplayLabel}>Correct Answer:</Text>
+                <View style={styles.answerDisplayBox}>
+                  <Katex
+                    expression={equations.equations[currentIndex].answer}
+                    displayMode={true}
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* Action Buttons */}
+            <View style={styles.buttonGroup}>
+              <TouchableOpacity style={[styles.button, styles.checkButton]} onPress={checkAnswer}>
+                <Text style={styles.buttonText}>✓ Check Answer</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={[styles.button, styles.hintButton]} onPress={showCorrectAnswer}>
+                <Text style={styles.buttonText}>💡 Show Answer</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.backButton}>
-              <Text style={styles.nextText}> Next  </Text>
+
+            <TouchableOpacity style={[styles.button, styles.nextButton]} onPress={handleNextQuestion}>
+              <Text style={styles.buttonText}>
+                {currentIndex + 1 === equations.equations.length ? '🏁 Finish' : '→ Next Question'}
+              </Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -79,83 +158,192 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   container: { 
     padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 24,
+    width: '100%',
   },
   title: { 
-    fontSize: 36, 
-    fontWeight: 'bold', 
-    color: '#8B4513', 
-    marginBottom: 20 
+    fontSize: 32, 
+    fontWeight: '700', 
+    color: '#8B4513',
+    letterSpacing: 0.5,
   },
-  mathInputContainer: {
-    width: '100%',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 15,
-    padding: 20,
+  backButton: { 
+    backgroundColor: 'rgba(139, 69, 19, 0.1)',
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20,
+  },
+  backText: { 
+    color: '#8B4513', 
+    fontSize: 16, 
+    fontWeight: '600',
+  },
+  placeholder: {
+    width: 60,
+  },
+  questionCard: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 24,
     marginBottom: 20,
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  questionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  levelBadge: {
+    backgroundColor: '#F5E6D3',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  levelText: {
+    color: '#8B4513',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  techniqueText: {
+    color: '#A0522D',
+    fontSize: 14,
+    fontWeight: '500',
+    fontStyle: 'italic',
+  },
+  descriptionText: {
+    fontSize: 16,
+    color: '#2C1810',
+    lineHeight: 24,
+    marginBottom: 24,
+    fontWeight: '500',
+  },
+  equationContainer: {
+    backgroundColor: '#FDF8F2',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0E0D0',
+  },
+  answerCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 3,
   },
-  mathLabel: {
-    fontSize: 16,
-    fontWeight: '600',
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#8B4513',
-    marginBottom: 10,
+    marginBottom: 16,
   },
   mathInput: {
-    borderWidth: 1,
-    borderColor: '#D4A574',
-    borderRadius: 10,
-    padding: 12,
+    borderWidth: 2,
+    borderColor: '#E8D5B7',
+    borderRadius: 16,
+    padding: 16,
     fontSize: 16,
     fontFamily: 'monospace',
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
     marginBottom: 20,
-    color: '#333',
-    minHeight: 80,
+    color: '#2C1810',
+    minHeight: 100,
     textAlignVertical: 'top',
   },
-  mathPreview: {
-    borderTopWidth: 1,
-    borderTopColor: '#F0E0D0',
-    paddingTop: 15,
+  previewContainer: {
+    marginBottom: 20,
   },
   previewLabel: {
     fontSize: 14,
+    fontWeight: '600',
     color: '#8B4513',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   katexContainer: {
-    backgroundColor: '#F9F5F0',
-    borderRadius: 8,
-    padding: 15,
+    backgroundColor: '#FDF8F2',
+    borderRadius: 12,
+    padding: 16,
     minHeight: 80,
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0E0D0',
   },
-  backButton: { 
-    backgroundColor: '#8B4513', 
-    paddingHorizontal: 20, 
-    paddingVertical: 12, 
-    borderRadius: 8, 
-    marginTop: 20,
+  answerDisplayContainer: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: '#F0F9F0',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
   },
-  backText: { 
-    color: 'white', 
-    fontSize: 16, 
-    fontWeight: '600' 
+  answerDisplayLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#2E7D32',
+    marginBottom: 12,
   },
-  nextText: { 
-    color: 'white', 
-    fontSize: 16, 
-    fontWeight: '600', 
-    textAlign: 'center',
-  },
-  questionsField: {
+  answerDisplayBox: {
     backgroundColor: 'white',
-    padding: 40,
-    width: 180,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkButton: {
+    backgroundColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  hintButton: {
+    backgroundColor: '#FF9800',
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  nextButton: {
+    backgroundColor: '#8B4513',
+    shadowColor: '#8B4513',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
