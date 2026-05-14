@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import Katex from 'react-native-katex';
-import rawData from "../../assets/questions/algebra/exponents/basic.json" with {type: 'json'};
+import rawData from "../../assets/questions/algebra/exponents/manipulation.json" with {type: 'json'};
 
 interface Equation {
   eq: string;
