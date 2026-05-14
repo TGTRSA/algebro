@@ -4,10 +4,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import Katex from 'react-native-katex';
+import rawData from "../assets/questions/algebra/basic.json" with {type: 'json'};
+
+interface Equation {
+  eq: string;
+  level: string;
+}
+
+interface EquationSet { 
+  equations: Equation[];
+}
 
 export default function Algebra() {
   const [latex, setLatex] = useState<string>('x^2');
-
+  const equations: EquationSet = rawData as EquationSet;
   const handleInputChange = (text: string): void => {
     setLatex(text);
   };
@@ -17,7 +27,12 @@ export default function Algebra() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.container}>
           <Text style={styles.title}>Algebra</Text>
-          
+          <Katex style={styles.questionsField} 
+              expression={equations.equations[1].eq}
+              displayMode={false}
+              >
+
+          </Katex>
           {/* Natural-looking math input area */}
           <View style={styles.mathInputContainer}>
             <Text style={styles.mathLabel}>Enter your math expression:</Text>
@@ -45,6 +60,9 @@ export default function Algebra() {
                 />
               </View>
             </View>
+            <TouchableOpacity style={styles.backButton}>
+              <Text style={styles.nextText}> Next  </Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -128,5 +146,16 @@ const styles = StyleSheet.create({
     color: 'white', 
     fontSize: 16, 
     fontWeight: '600' 
+  },
+  nextText: { 
+    color: 'white', 
+    fontSize: 16, 
+    fontWeight: '600', 
+    textAlign: 'center',
+  },
+  questionsField: {
+    backgroundColor: 'white',
+    padding: 40,
+    width: 180,
   },
 });

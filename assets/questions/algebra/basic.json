@@ -1,0 +1,12 @@
+{
+  "equations": [
+    {
+      "eq": "x^2 \\cdot x^2",
+      "level": "basic"
+    },
+    {
+      "eq": "x^2 \\cdot x^3", 
+      "level": "basic"
+    }
+  ]
+}
