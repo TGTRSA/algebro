@@ -18,43 +18,75 @@ interface EquationSet {
   equations: Equation[];
 }
 
+// Normalization helper
+const normalizeAnswer = (answer: string): string => {
+  return answer.replace(/\s/g, '');
+};
+
+// Check if answers match
+const isAnswerCorrect = (userAnswer: string, correctAnswer: string): boolean => {
+  return normalizeAnswer(userAnswer) === normalizeAnswer(correctAnswer);
+};
+
+// Show result to user
+const showResult = (
+  isCorrect: boolean, 
+  correctAnswer: string, 
+  setShowAnswer: (show: boolean) => void
+): void => {
+  if (isCorrect) {
+    alert('Correct! 🎉');
+  } else {
+    alert(`Incorrect. The correct answer is: ${correctAnswer}`);
+    setShowAnswer(true);
+  }
+};
+
+// Check if this is the last question
+const isLastQuestion = (currentIndex: number, totalQuestions: number): boolean => {
+  return currentIndex + 1 === totalQuestions;
+};
+
+// Handle completion
+const handleCompletion = (router: any): void => {
+  alert('Congratulations! You\'ve completed all questions!');
+  router.back();
+};
+
+// ============================================
+// THE COMPONENT (now much cleaner!)
+// ============================================
+
 export default function Algebra() {
   const [latex, setLatex] = useState<string>('');
   const equations: EquationSet = rawData as EquationSet;
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [showAnswer, setShowAnswer] = useState<boolean>(false);
 
-  const handleInputChange = useCallback((text: string): void => {
+  // These need to stay inside because they use state setters
+  const handleInputChange = (text: string): void => {
     setLatex(text);
-  }, []);
+  };
 
-  const checkAnswer = useCallback((): void => {
-    // Compare normalized strings (remove whitespace)
-    const userAnswer = latex.replace(/\s/g, '');
-    const correctAnswer = equations.equations[currentIndex].answer.replace(/\s/g, '');
-    
-    if (userAnswer === correctAnswer) {
-      alert('Correct! 🎉');
-    } else {
-      alert(`Incorrect. The correct answer is: ${equations.equations[currentIndex].answer}`);
-      setShowAnswer(true);
-    }
-  }, [latex, currentIndex, equations]);
+  const checkAnswer = (): void => {
+    const correctAnswer = equations.equations[currentIndex].answer;
+    const correct = isAnswerCorrect(latex, correctAnswer);
+    showResult(correct, correctAnswer, setShowAnswer);
+  };
 
-  const showCorrectAnswer = useCallback((): void => {
+  const showCorrectAnswer = (): void => {
     setShowAnswer(true);
-  }, []);
+  };
 
-  const handleNextQuestion = useCallback((): void => {
-    if (currentIndex + 1 < equations.equations.length) {
+  const handleNextQuestion = (): void => {
+    if (!isLastQuestion(currentIndex, equations.equations.length)) {
       setCurrentIndex(currentIndex + 1);
       setLatex('');
       setShowAnswer(false);
     } else {
-      alert('Congratulations! You\'ve completed all questions!');
-      router.back();
+      handleCompletion(router);
     }
-  }, [currentIndex, equations]);
+  };
 
   return (
     <LinearGradient colors={['#FDF5E6', '#F5E6D3']} style={styles.gradient}>
@@ -143,7 +175,7 @@ export default function Algebra() {
 
             <TouchableOpacity style={[styles.button, styles.nextButton]} onPress={handleNextQuestion}>
               <Text style={styles.buttonText}>
-                {currentIndex + 1 === equations.equations.length ? '🏁 Finish' : '→ Next Question'}
+                {isLastQuestion(currentIndex, equations.equations.length) ? '🏁 Finish' : '→ Next Question'}
               </Text>
             </TouchableOpacity>
           </View>
