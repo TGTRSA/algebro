@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import json
-from pathlib import Path
+import sys
 
 app = FastAPI()
 
@@ -15,38 +14,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load equations
-with open(Path(__file__).parent / "equations.json") as f:
-    equations_data = json.load(f)
-
-class AnswerCheck(BaseModel):
+class AnswerData(BaseModel):
     user_answer: str
     equation_id: int
 
-@app.get("/api/equations")
-async def get_equations():
-    return equations_data
-
-@app.post("/api/check-answer")
-async def check_answer(data: AnswerCheck):
-    equation = equations_data["equations"][data.equation_id]
+@app.post("/api/check")
+async def check_answer(data: AnswerData):
+    # DEBUG: Print to Python console
+    print(f"\n[Python] Received from Expo:")
+    print(f"[Python]   - User Answer: {data.user_answer}")
+    print(f"[Python]   - Equation ID: {data.equation_id}")
     
-    # Normalize answers
-    user_norm = data.user_answer.replace(" ", "").lower()
-    correct_norm = equation["answer"].replace(" ", "").lower()
-    
-    is_correct = user_norm == correct_norm
-    
-    return {
-        "correct": is_correct,
-        "correct_answer": equation["answer"] if not is_correct else None,
-        "message": "Correct! 🎉" if is_correct else "Incorrect. Check the correct answer below."
+    # Simple response for now
+    response = {
+        "status": "received",
+        "your_answer": data.user_answer,
+        "message": f"Python received: {data.user_answer}"
     }
+    
+    print(f"[Python] Sending back: {response}")
+    print(f"[Python] " + "="*50)
+    
+    return response
 
-@app.get("/api/health")
-async def health():
-    return {"status": "ok"}
+@app.get("/api/test")
+async def test():
+    print("\n[Python] Test endpoint called")
+    return {"message": "Python backend is running!"}
 
 if __name__ == "__main__":
     import uvicorn
+    print("\n[Python] 🚀 Starting FastAPI server...")
+    print("[Python] Listening on http://localhost:8000")
+    print("[Python] " + "="*50)
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Subject = {
   name: string;
-  route: '/algebra' | '/trig' | '/calc';
+  route: '/algebra' | '/trig' | '/calc' | '/debug';
   description: string;
   gradient: [string, string];
   icon: string;
@@ -13,6 +13,13 @@ type Subject = {
 
 export default function Homepage() {
   const subjects: Subject[] = [
+    { 
+      name: 'Debug', 
+      route: '/debug',
+      description: 'Debugging page',
+      gradient: ['#4A3B52', '#7B5D6F'],
+      icon: 'D'
+    },
     { 
       name: 'Algebra', 
       route: '/algebra',
@@ -34,6 +41,7 @@ export default function Homepage() {
       gradient: ['#4A3B52', '#7B5D6F'],
       icon: '∫'
     },
+    
   ];
 
   return (
