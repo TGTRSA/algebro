@@ -165,17 +165,17 @@ export default function Algebra() {
             {/* Action Buttons */}
             <View style={styles.buttonGroup}>
               <TouchableOpacity style={[styles.button, styles.checkButton]} onPress={checkAnswer}>
-                <Text style={styles.buttonText}>✓ Check Answer</Text>
+                <Text style={styles.buttonText}> ✓ Check Answer</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={[styles.button, styles.hintButton]} onPress={showCorrectAnswer}>
-                <Text style={styles.buttonText}>💡 Show Answer</Text>
+                <Text style={styles.buttonText}> 💡 Show Answer</Text>
               </TouchableOpacity>
             </View>
 
             <TouchableOpacity style={[styles.button, styles.nextButton]} onPress={handleNextQuestion}>
               <Text style={styles.buttonText}>
-                {isLastQuestion(currentIndex, equations.equations.length) ? '🏁 Finish' : '→ Next Question'}
+                {isLastQuestion(currentIndex, equations.equations.length) ? ' Finish' : '→ Next Question'}
               </Text>
             </TouchableOpacity>
           </View>
