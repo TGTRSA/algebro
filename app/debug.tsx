@@ -6,6 +6,21 @@ import rawData from '../assets/questions/algebra/exponents/expansion.json';
 import Katex from 'react-native-katex';
 import { CustomKeyboard } from '@/assets/custom_obs/keybaord';
 
+const advancedLayout = [
+    [
+        { label: 'x', value: 'x', type: 'text' },
+        { label: 'y', value: 'y', type: 'text' },
+        { label: 'Power', value: '^', type: 'special', width: 80 },
+        { label: 'Sub', value: '_', type: 'special', width: 80 }
+    ],
+    [
+        { label: '1', value: '1', type: 'text' },
+        { label: '2', value: '2', type: 'text' },
+        { label: '3', value: '3', type: 'text' },
+        { label: 'Fraction', value: '\\frac{}{}', type: 'special', width: 100 }
+    ]
+]
+
 interface Equation {
   eq: string;
   level: string;
@@ -162,9 +177,31 @@ export default function ExponentsPage() {
           }}>
           <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold'}}> Previous Question</Text>
         </TouchableOpacity>
-        <CustomKeyboard
-          layout={[['1','2','3'], ['4', '5', '6']]}  
-        />
+        <CustomKeyboard 
+          layout={advancedLayout}
+          onKeyPress={handleKeyPress}
+          activeKeyColor="#8B4513"
+          inactiveKeyColor="#F5E6D3"
+          textColor="#2C1810"
+          keyBorderRadius={12}
+          keySpacing={8}
+          showDeleteKey={true}
+          deleteKeyLabel="⌫ Delete"
+          showClearKey={true}
+          clearKeyLabel="Clear All"
+          showSpaceKey={true}
+          spaceKeyLabel="Space"
+          onDelete={() => setLatex(prev => prev.slice(0, -1))}
+          onClear={() => setLatex('')}
+          onSpace={() => setLatex(prev => prev + ' ')}
+          keyStyle={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+          }}
+      />
           
       </View>
     </ScrollView>
