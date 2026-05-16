@@ -5,6 +5,7 @@ import { WebView } from 'react-native-webview';
 import rawData from '../assets/questions/algebra/exponents/expansion.json';
 import Katex from 'react-native-katex';
 
+
 interface Equation {
   eq: string;
   level: string;
@@ -55,19 +56,37 @@ export default function ExponentsPage() {
   const current = equations[currentIndex];
 
   return (
-    <ScrollView style={{ padding: 20, backgroundColor: '#FDF5E6' }}>
+    <ScrollView style={{ flex: 2, padding: 20, backgroundColor: '#FDF5E6' }}>
       
       {/* Header with Title */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#8B4513' }}>Exponents</Text>
-      </View>
+       <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Text style={styles.backText}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Algebra</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-      {/* Question Card */}
+      {/* Question Card
       <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 20, marginBottom: 20 }}>
         <Text style={{ fontSize: 12, color: '#8B4513' }}>{current.level}</Text>
         <Text style={{ fontSize: 16, fontStyle: 'italic', marginVertical: 8 }}>{current.technique}</Text>
         <Text style={{ fontSize: 14, marginBottom: 16 }}>{current.description}</Text>
         <KatexWebView expression={current.eq} />
+      </View> */}
+     <View style={styles.questionCard}>
+        <View style={styles.questionHeader}>
+          <View style={styles.levelBadge}>
+            <Text style={styles.levelText}>{current.level}</Text>
+          </View>
+          <Text style={styles.techniqueText}>{current.technique}</Text>
+        </View>
+        
+        <Text style={styles.descriptionText}>{current.description}</Text>
+        
+        <View style={styles.equationContainer}>
+          <KatexWebView expression={current.eq}/>
+        </View>
       </View>
 
       {/* Answer Card */}
@@ -139,6 +158,7 @@ export default function ExponentsPage() {
           }}>
           <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold'}}> Previous Question</Text>
         </TouchableOpacity>
+        
       </View>
     </ScrollView>
   );
@@ -221,10 +241,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   equationContainer: {
-    backgroundColor: '#FDF8F2',
+    // backgroundColor: '#FDF8F2',
     borderRadius: 16,
     padding: 24,
-    alignItems: 'center',
+    // alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#F0E0D0',

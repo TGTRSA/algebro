@@ -6,6 +6,30 @@ import { useState, useCallback } from 'react';
 import Katex from 'react-native-katex';
 import rawData from "../../assets/questions/algebra/exponents/expansion.json" with {type: 'json'};
 
+const KatexWebView = ({ expression }: { expression: string }) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    </head>
+    <body style="margin: 0; padding: 12px; background: white; display: flex; justify-content: center; align-items: center;">
+      <div id="math"></div>
+      <script>
+        katex.render("${expression.replace(/\\/g, '\\\\')}", document.getElementById('math'), {
+          displayMode: true,
+          throwOnError: false
+        });
+      </script>
+    </body>
+    </html>
+  `;
+  return <WebView source={{ html }} style={{ height: 80 }} scrollEnabled={false} />;
+};
+
+
 interface Equation {
   eq: string;
   level: string;
@@ -101,7 +125,7 @@ export default function Algebra() {
             <View style={styles.placeholder} />
           </View>
 
-          {/* Question Card */}
+          Question Card
           <View style={styles.questionCard}>
             <View style={styles.questionHeader}>
               <View style={styles.levelBadge}>
