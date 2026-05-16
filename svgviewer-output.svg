@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1024" height="1024" fill="url(#grad)" rx="225"/>
+  
+  <!-- Left bar -->
+  <line x1="280" y1="280" x2="280" y2="744" stroke="white" stroke-width="48" stroke-linecap="round"/>
+  
+  <!-- X - slightly smaller (Y range reduced) and wider (X range increased) -->
+  <line x1="400" y1="380" x2="624" y2="644" stroke="white" stroke-width="48" stroke-linecap="round"/>
+  <line x1="624" y1="380" x2="400" y2="644" stroke="white" stroke-width="48" stroke-linecap="round"/>
+  
+  <!-- Right bar -->
+  <line x1="744" y1="280" x2="744" y2="744" stroke="white" stroke-width="48" stroke-linecap="round"/>
+</svg>

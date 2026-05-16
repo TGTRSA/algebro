@@ -1,0 +1,382 @@
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState, useEffect } from 'react';
+import { WebView } from 'react-native-webview';
+
+// Import your existing data to test
+const rawData = require("../assets/questions/algebra/exponents/expansion.json");
+
+interface Equation {
+  eq: string;
+  level: string;
+  technique: string;
+  description: string;
+  answer: string;
+}
+
+// WebView LaTeX renderer (working version)
+const LatexRenderer = ({ expression, displayMode = false }: { expression: string; displayMode?: boolean }) => {
+  const fontSize = displayMode ? 32 : 24;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.js"></script>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          background-color: transparent;
+        }
+        .katex {
+          font-size: ${fontSize}px;
+        }
+      </style>
+    </head>
+    <body>
+      <div id="math"></div>
+      <script>
+        try {
+          katex.render("${expression.replace(/\\/g, '\\\\')}", document.getElementById('math'), {
+            throwOnError: false,
+            displayMode: ${displayMode}
+          });
+        } catch(e) {
+          document.getElementById('math').innerHTML = '<span style="color: red; font-size: 16px;">Error: ${expression}</span>';
+        }
+      </script>
+    </body>
+    </html>
+  `;
+
+  return (
+    <WebView
+      originWhitelist={['*']}
+      source={{ html }}
+      style={{ height: displayMode ? 80 : 60, backgroundColor: 'transparent' }}
+      scrollEnabled={false}
+    />
+  );
+};
+
+export default function DebugPage() {
+  const [equations, setEquations] = useState<Equation[]>([]);
+  const [debugLog, setDebugLog] = useState<string[]>([]);
+  const [testExpression, setTestExpression] = useState<string>("x^2 + y^2 = z^2");
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+
+  const addLog = (message: string) => {
+    console.log(`[Debug] ${message}`);
+    setDebugLog(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev].slice(0, 30));
+  };
+
+  useEffect(() => {
+    // Test loading data
+    addLog("Debug page mounted");
+    
+    if (rawData && rawData.equations) {
+      setEquations(rawData.equations);
+      addLog(`✅ Loaded ${rawData.equations.length} equations`);
+      addLog(`First equation: ${rawData.equations[0].eq}`);
+      addLog(`Raw data type: ${typeof rawData}`);
+      addLog(`Raw data keys: ${Object.keys(rawData).join(', ')}`);
+    } else {
+      addLog(`❌ Failed to load equations. rawData: ${JSON.stringify(rawData)}`);
+    }
+  }, []);
+
+  const testKatexRender = () => {
+    addLog(`Testing render with: "${testExpression}"`);
+    // Force re-render by updating a state
+    setCurrentIndex(prev => prev);
+  };
+
+  const testDifferentExpressions = [
+    "x^2",
+    "\\frac{1}{2}",
+    "\\sqrt{x}",
+    "x^{2} + 2x + 1",
+    "\\int_{0}^{\\infty} e^{-x} dx"
+  ];
+
+  return (
+    <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.gradient}>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.container}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+              <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>🐛 Debug Console</Text>
+            <TouchableOpacity 
+              style={styles.clearButton} 
+              onPress={() => setDebugLog([])}>
+              <Text style={styles.clearText}>Clear</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Test LaTeX Renderer */}
+          <View style={styles.testCard}>
+            <Text style={styles.cardTitle}>🎨 LaTeX Renderer Test</Text>
+            
+            <TextInput
+              style={styles.input}
+              value={testExpression}
+              onChangeText={setTestExpression}
+              placeholder="Enter LaTeX expression..."
+              placeholderTextColor="#666"
+            />
+            
+            <TouchableOpacity style={styles.testButton} onPress={testKatexRender}>
+              <Text style={styles.testButtonText}>Test Render</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.renderPreview}>
+              <Text style={styles.previewLabel}>Rendered Output:</Text>
+              <View style={styles.renderContainer}>
+                <LatexRenderer expression={testExpression} displayMode={true} />
+              </View>
+            </View>
+          </View>
+
+          {/* Test Different Expressions */}
+          <View style={styles.testCard}>
+            <Text style={styles.cardTitle}>📐 Test Expressions</Text>
+            <View style={styles.expressionGrid}>
+              {testDifferentExpressions.map((expr, idx) => (
+                <TouchableOpacity 
+                  key={idx}
+                  style={styles.expressionButton}
+                  onPress={() => setTestExpression(expr)}>
+                  <Text style={styles.expressionText}>{expr}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Loaded Data Display */}
+          <View style={styles.testCard}>
+            <Text style={styles.cardTitle}>📦 Loaded Equation Data</Text>
+            {equations.length > 0 ? (
+              <>
+                <Text style={styles.dataText}>Total equations: {equations.length}</Text>
+                <View style={styles.equationList}>
+                  {equations.map((eq, idx) => (
+                    <View key={idx} style={styles.equationItem}>
+                      <Text style={styles.equationIndex}>#{idx + 1}</Text>
+                      <View style={styles.equationPreview}>
+                        <LatexRenderer expression={eq.eq} displayMode={false} />
+                      </View>
+                      <Text style={styles.equationAnswer}>→ {eq.answer}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            ) : (
+              <Text style={styles.errorText}>No equations loaded. Check JSON file.</Text>
+            )}
+          </View>
+
+          {/* Debug Log */}
+          <View style={styles.logCard}>
+            <Text style={styles.cardTitle}>📝 Debug Log</Text>
+            <ScrollView style={styles.logContainer} nestedScrollEnabled={true}>
+              {debugLog.length === 0 ? (
+                <Text style={styles.logText}>Waiting for debug events...</Text>
+              ) : (
+                debugLog.map((log, i) => (
+                  <Text key={i} style={styles.logText}>
+                    {log}
+                  </Text>
+                ))
+              )}
+            </ScrollView>
+          </View>
+
+          {/* Instructions */}
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>💡 Debug Info:</Text>
+            <Text style={styles.infoText}>• WebView renderer should show LaTeX correctly</Text>
+            <Text style={styles.infoText}>• Try different test expressions above</Text>
+            <Text style={styles.infoText}>• Check if JSON data loaded properly</Text>
+            <Text style={styles.infoText}>• If equations show as text, KaTeX CDN may be blocked</Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
+  );
+}
+
+const styles = StyleSheet.create({
+  gradient: { flex: 1 },
+  safeArea: { flex: 1 },
+  container: { 
+    padding: 16,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: '700', 
+    color: '#fff',
+  },
+  backButton: { 
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20,
+  },
+  backText: { 
+    color: '#fff', 
+    fontSize: 14, 
+    fontWeight: '600',
+  },
+  clearButton: {
+    backgroundColor: 'rgba(255,107,107,0.2)',
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20,
+  },
+  clearText: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  testCard: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 16,
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    fontFamily: 'monospace',
+    marginBottom: 12,
+  },
+  testButton: {
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  testButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  renderPreview: {
+    marginTop: 8,
+  },
+  previewLabel: {
+    color: '#aaa',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  renderContainer: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 16,
+    minHeight: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  expressionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  expressionButton: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  expressionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: 'monospace',
+  },
+  dataText: {
+    color: '#fff',
+    marginBottom: 12,
+  },
+  equationList: {
+    gap: 12,
+  },
+  equationItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  equationIndex: {
+    color: '#4CAF50',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  equationPreview: {
+    minHeight: 50,
+    marginBottom: 8,
+  },
+  equationAnswer: {
+    color: '#aaa',
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  logCard: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+  },
+  logContainer: {
+    maxHeight: 200,
+  },
+  logText: {
+    color: '#0f0',
+    fontSize: 10,
+    fontFamily: 'monospace',
+    marginBottom: 4,
+  },
+  errorText: {
+    color: '#ff6b6b',
+  },
+  infoCard: {
+    backgroundColor: 'rgba(100,100,200,0.2)',
+    borderRadius: 16,
+    padding: 16,
+  },
+  infoTitle: {
+    color: '#fff',
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  infoText: {
+    color: '#ccc',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+});

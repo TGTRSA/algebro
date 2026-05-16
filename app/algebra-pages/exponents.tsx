@@ -18,7 +18,7 @@ interface EquationSet {
   equations: Equation[];
 }
 
-// Normalization helper
+// Normalization helper: removes whitespace
 const normalizeAnswer = (answer: string): string => {
   return answer.replace(/\s/g, '');
 };
@@ -116,6 +116,7 @@ export default function Algebra() {
               <Katex 
                 expression={equations.equations[currentIndex].eq}
                 displayMode={true}
+                throwOnError={true}
               />
             </View>
           </View>
@@ -128,7 +129,7 @@ export default function Algebra() {
               style={styles.mathInput}
               value={latex}
               onChangeText={handleInputChange}
-              placeholder="Enter your answer here... (e.g., x^2, \sqrt{x}, \frac{1}{2})"
+              placeholder="Enter your answer here... (e.g., x^2)"
               placeholderTextColor="#999"
               autoFocus={true}
               multiline
@@ -165,11 +166,11 @@ export default function Algebra() {
             {/* Action Buttons */}
             <View style={styles.buttonGroup}>
               <TouchableOpacity style={[styles.button, styles.checkButton]} onPress={checkAnswer}>
-                <Text style={styles.buttonText}> ✓ Check Answer</Text>
+                <Text style={styles.buttonText}> Check Answer</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={[styles.button, styles.hintButton]} onPress={showCorrectAnswer}>
-                <Text style={styles.buttonText}> 💡 Show Answer</Text>
+                <Text style={styles.buttonText}> Show Answer</Text>
               </TouchableOpacity>
             </View>
 

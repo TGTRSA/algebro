@@ -5,21 +5,21 @@
       "level": "basic",
       "technique": "Expansion",
       "description": "Please expand the following in terms of x",
-      "answer":  "x \\cot x \\cdot x \\cdot x"
+      "answer":  "x \\cdot x \\cdot x \\cdot x"
     },
     {
       "eq": "x^2 \\cdot x^3", 
       "level": "basic",
       "technique": "Expansion",
       "description": "Please expand the following in terms of x",
-      "answer":  "x \\cot x \\cdot x \\cdot x"
+      "answer":  "x \\cdot x \\cdot x \\cdot x"
     },
     {
       "eq": "x^2(x^3)", 
       "level": "basic",
       "technique": "Expansion",
       "description": "Please expand the following in terms of x",
-      "answer":  "x \\cot x \\cdot x \\cdot x"
+      "answer":  "x \\cot x \\cdot x \\cdot x \\cdot x"
     }
   ]
 }

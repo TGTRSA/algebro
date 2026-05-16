@@ -1,160 +1,108 @@
-import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { useState, useEffect } from 'react';
+import { WebView } from 'react-native-webview';
+import rawData from '../assets/questions/algebra/exponents/expansion.json';
 
-const API_URL = 'http://localhost:8000';
+const KatexWebView = ({ expression }: { expression: string }) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+      <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    </head>
+    <body style="margin: 0; padding: 12px; background: white; display: flex; justify-content: center; align-items: center;">
+      <div id="math"></div>
+      <script>
+        katex.render("${expression.replace(/\\/g, '\\\\')}", document.getElementById('math'), {
+          displayMode: true,
+          throwOnError: false
+        });
+      </script>
+    </body>
+    </html>
+  `;
+  return <WebView source={{ html }} style={{ height: 80 }} scrollEnabled={false} />;
+};
 
-export default function DebugScreen() {
-  const [latex, setLatex] = useState<string>('');
-  const [debugLog, setDebugLog] = useState<string[]>([]);
-  const router = useRouter();
+export default function ExponentsPage() {
+  const [latex, setLatex] = useState('');
+  const [equations, setEquations] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
 
-  const addDebugLog = (message: string) => {
-    console.log(`[Expo] ${message}`);
-    setDebugLog(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev].slice(0, 20));
-  };
+  useEffect(() => {
+    if (rawData?.equations) setEquations(rawData.equations);
+  }, []);
 
-  const testConnection = async () => {
-    addDebugLog('Testing connection to Python backend...');
-    
-    try {
-      const response = await fetch(`${API_URL}/api/test`);
-      const data = await response.json();
-      
-      addDebugLog(`✅ Connection successful!`);
-      addDebugLog(`📡 Python says: ${data.message}`);
-      Alert.alert('Success', `Connected to Python!\n${data.message}`);
-    } catch (error) {
-      addDebugLog(`❌ Connection failed: ${error}`);
-      Alert.alert('Error', 'Cannot connect to Python backend.\nMake sure it\'s running on port 8000');
-    }
-  };
+  if (equations.length === 0) return <Text>Loading...</Text>;
 
-  const sendToPython = async () => {
-    if (!latex.trim()) {
-      Alert.alert('No Input', 'Please enter something to send');
-      return;
-    }
-
-    addDebugLog(`📤 Sending to Python: "${latex}"`);
-    
-    try {
-      const response = await fetch(`${API_URL}/api/check`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_answer: latex,
-          equation_id: 0
-        })
-      });
-      
-      const data = await response.json();
-      
-      addDebugLog(`📥 Received from Python:`);
-      addDebugLog(`   Status: ${data.status}`);
-      addDebugLog(`   Message: ${data.message}`);
-      addDebugLog(`   Your answer: ${data.your_answer}`);
-      
-      Alert.alert('Python Response', data.message);
-      
-    } catch (error) {
-      addDebugLog(`❌ Error sending to Python: ${error}`);
-      Alert.alert('Error', 'Failed to communicate with Python backend');
-    }
-  };
-
-  const clearLog = () => {
-    setDebugLog([]);
-    addDebugLog('Debug log cleared');
-  };
+  const current = equations[currentIndex];
 
   return (
-    <LinearGradient colors={['#1a1a2e', '#16213e']} style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView style={{ flex: 1, padding: 20 }}>
-          {/* Header */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => router.back()}>
-              <Text style={{ fontSize: 18, color: '#fff' }}>← Back</Text>
-            </TouchableOpacity>
-            <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#fff' }}>🐍 Python Debug</Text>
-            <TouchableOpacity onPress={clearLog}>
-              <Text style={{ fontSize: 14, color: '#ff6b6b' }}>Clear</Text>
-            </TouchableOpacity>
-          </View>
+    <ScrollView style={{ padding: 20, backgroundColor: '#FDF5E6' }}>
+      
+      {/* Header with Title */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#8B4513' }}>Exponents</Text>
+      </View>
 
-          {/* Connection Test Button */}
-          <TouchableOpacity
-            style={{ backgroundColor: '#007AFF', padding: 15, borderRadius: 8, marginBottom: 20 }}
-            onPress={testConnection}
-          >
-            <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
-              🔌 Test Python Connection
-            </Text>
-          </TouchableOpacity>
+      {/* Question Card */}
+      <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 20, marginBottom: 20 }}>
+        <Text style={{ fontSize: 12, color: '#8B4513' }}>{current.level}</Text>
+        <Text style={{ fontSize: 16, fontStyle: 'italic', marginVertical: 8 }}>{current.technique}</Text>
+        <Text style={{ fontSize: 14, marginBottom: 16 }}>{current.description}</Text>
+        <KatexWebView expression={current.eq} />
+      </View>
 
-          {/* Input Area */}
-          <View style={{ backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#fff' }}>
-              Send to Python:
-            </Text>
-            
-            <TextInput
-              style={{ 
-                borderWidth: 1, 
-                borderColor: '#333', 
-                borderRadius: 8, 
-                padding: 12, 
-                fontSize: 16,
-                minHeight: 100,
-                backgroundColor: '#fff',
-                color: '#000'
-              }}
-              value={latex}
-              onChangeText={setLatex}
-              placeholder="Type anything to send to Python..."
-              placeholderTextColor="#999"
-              multiline
-            />
-            
-            <TouchableOpacity
-              style={{ backgroundColor: '#34C759', padding: 15, borderRadius: 8, marginTop: 10 }}
-              onPress={sendToPython}
-            >
-              <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
-                📤 Send to Python
-              </Text>
-            </TouchableOpacity>
+      {/* Answer Card */}
+      <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Your Answer</Text>
+        
+        <TextInput
+          style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 12, padding: 12, minHeight: 80 }}
+          value={latex}
+          onChangeText={setLatex}
+          placeholder="Enter answer..."
+          multiline
+        />
+        
+        {showAnswer && (
+          <View style={{ marginTop: 16, padding: 12, backgroundColor: '#e8f5e9', borderRadius: 12 }}>
+            <Text>Correct Answer:</Text>
+            <KatexWebView expression={current.answer} />
           </View>
+        )}
 
-          {/* Debug Log */}
-          <View style={{ backgroundColor: '#0a0a0a', borderRadius: 12, padding: 20, borderWidth: 1, borderColor: '#333' }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>
-              🐛 Debug Log:
-            </Text>
-            <ScrollView style={{ maxHeight: 400 }}>
-              {debugLog.length === 0 ? (
-                <Text style={{ color: '#666', fontFamily: 'monospace' }}>Waiting for activity...</Text>
-              ) : (
-                debugLog.map((log, i) => (
-                  <Text key={i} style={{ color: '#0f0', fontSize: 12, fontFamily: 'monospace', marginBottom: 5 }}>
-                    {log}
-                  </Text>
-                ))
-              )}
-            </ScrollView>
-          </View>
+        <TouchableOpacity 
+          style={{ backgroundColor: '#4CAF50', padding: 14, borderRadius: 12, marginTop: 20 }}
+          onPress={() => {
+            const normalize = (s: string) => s.replace(/\s/g, '').toLowerCase();
+            if (normalize(latex) === normalize(current.answer)) {
+              alert('Correct! 🎉');
+            } else {
+              alert(`Incorrect. Answer: ${current.answer}`);
+              setShowAnswer(true);
+            }
+          }}>
+          <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>✓ Check Answer</Text>
+        </TouchableOpacity>
 
-          {/* Instructions */}
-          <View style={{ marginTop: 20, padding: 12, backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 8 }}>
-            <Text style={{ color: '#888', fontSize: 12 }}>
-              💡 Make sure Python backend is running: cd backend && python main.py
-            </Text>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+        <TouchableOpacity 
+          style={{ backgroundColor: '#8B4513', padding: 14, borderRadius: 12, marginTop: 12 }}
+          onPress={() => {
+            if (currentIndex + 1 < equations.length) {
+              setCurrentIndex(currentIndex + 1);
+              setLatex('');
+              setShowAnswer(false);
+            } else {
+              alert('Complete!');
+            }
+          }}>
+          <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>→ Next Question</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
