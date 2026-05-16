@@ -1,7 +1,21 @@
 import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useState, useEffect } from 'react';
 import { WebView } from 'react-native-webview';
 import rawData from '../assets/questions/algebra/exponents/expansion.json';
+import Katex from 'react-native-katex';
+
+interface Equation {
+  eq: string;
+  level: string;
+  technique: string;
+  description: string;
+  answer: string;
+}
+
+interface EquationSet { 
+  equations: Equation[];
+}
 
 const KatexWebView = ({ expression }: { expression: string }) => {
   const html = `
@@ -31,7 +45,7 @@ export default function ExponentsPage() {
   const [equations, setEquations] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-
+  const [isZero, isNotZero] = useState(false);
   useEffect(() => {
     if (rawData?.equations) setEquations(rawData.equations);
   }, []);
@@ -67,13 +81,26 @@ export default function ExponentsPage() {
           placeholder="Enter answer..."
           multiline
         />
-        
-        {showAnswer && (
+        {/* Live Preview */}
+        {latex ? (
+          <View style={styles.previewContainer}>
+            <Text style={styles.previewLabel}>Preview:</Text>
+            <View style={styles.katexContainer}>
+              <KatexWebView
+                expression={latex}
+                // displayMode={true}
+                // throwOnError={false}
+                // errorColor="#cc0000"
+              />
+            </View>
+          </View>
+        ) : null}
+        {/* {showAnswer && (
           <View style={{ marginTop: 16, padding: 12, backgroundColor: '#e8f5e9', borderRadius: 12 }}>
             <Text>Correct Answer:</Text>
             <KatexWebView expression={current.answer} />
           </View>
-        )}
+        )} */}
 
         <TouchableOpacity 
           style={{ backgroundColor: '#4CAF50', padding: 14, borderRadius: 12, marginTop: 20 }}
@@ -102,7 +129,212 @@ export default function ExponentsPage() {
           }}>
           <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>→ Next Question</Text>
         </TouchableOpacity>
+       <TouchableOpacity 
+          disabled={currentIndex == 0}
+          style={{ backgroundColor: '#8B4513', padding: 14, borderRadius: 12, marginTop: 12 }}
+          onPress={() => {
+            setCurrentIndex(currentIndex - 1);
+            setLatex('');
+            setShowAnswer(false);
+          }}>
+          <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold'}}> Previous Question</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  gradient: { flex: 1 },
+  safeArea: { flex: 1 },
+  container: { 
+    padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+    width: '100%',
+  },
+  title: { 
+    fontSize: 32, 
+    fontWeight: '700', 
+    color: '#8B4513',
+    letterSpacing: 0.5,
+  },
+  backButton: { 
+    backgroundColor: 'rgba(139, 69, 19, 0.1)',
+    paddingHorizontal: 16, 
+    paddingVertical: 8, 
+    borderRadius: 20,
+  },
+  backText: { 
+    color: '#8B4513', 
+    fontSize: 16, 
+    fontWeight: '600',
+  },
+  placeholder: {
+    width: 60,
+  },
+  questionCard: {
+    backgroundColor: 'white',
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  questionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 12,
+  },
+  levelBadge: {
+    backgroundColor: '#F5E6D3',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  levelText: {
+    color: '#8B4513',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  techniqueText: {
+    color: '#A0522D',
+    fontSize: 14,
+    fontWeight: '500',
+    fontStyle: 'italic',
+  },
+  descriptionText: {
+    fontSize: 16,
+    color: '#2C1810',
+    lineHeight: 24,
+    marginBottom: 24,
+    fontWeight: '500',
+  },
+  equationContainer: {
+    backgroundColor: '#FDF8F2',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0E0D0',
+  },
+  answerCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#8B4513',
+    marginBottom: 16,
+  },
+  mathInput: {
+    borderWidth: 2,
+    borderColor: '#E8D5B7',
+    borderRadius: 16,
+    padding: 16,
+    fontSize: 16,
+    fontFamily: 'monospace',
+    backgroundColor: '#FFFFFF',
+    marginBottom: 20,
+    color: '#2C1810',
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  previewContainer: {
+    marginBottom: 20,
+  },
+  previewLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B4513',
+    marginBottom: 8,
+  },
+  katexContainer: {
+    backgroundColor: '#FDF8F2',
+    borderRadius: 12,
+    padding: 16,
+    minHeight: 80,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F0E0D0',
+  },
+  answerDisplayContainer: {
+    marginBottom: 20,
+    padding: 16,
+    backgroundColor: '#F0F9F0',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  answerDisplayLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#2E7D32',
+    marginBottom: 12,
+  },
+  answerDisplayBox: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkButton: {
+    backgroundColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  hintButton: {
+    backgroundColor: '#FF9800',
+    shadowColor: '#FF9800',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  nextButton: {
+    backgroundColor: '#8B4513',
+    shadowColor: '#8B4513',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+});
