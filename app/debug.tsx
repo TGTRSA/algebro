@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { WebView } from 'react-native-webview';
 import rawData from '../assets/questions/algebra/exponents/expansion.json';
 import Katex from 'react-native-katex';
-
+import { CustomKeyboard } from '@/assets/custom_obs/keybaord';
 
 interface Equation {
   eq: string;
@@ -54,6 +54,10 @@ export default function ExponentsPage() {
   if (equations.length === 0) return <Text>Loading...</Text>;
 
   const current = equations[currentIndex];
+
+  const handleKeyPress = (key: string) => {
+    console.log(key);
+  }
 
   return (
     <ScrollView style={{ flex: 2, padding: 20, backgroundColor: '#FDF5E6' }}>
@@ -158,9 +162,13 @@ export default function ExponentsPage() {
           }}>
           <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold'}}> Previous Question</Text>
         </TouchableOpacity>
-        
+        <CustomKeyboard
+          layout={[['1','2','3'], ['4', '5', '6']]}  
+        />
+          
       </View>
     </ScrollView>
+    
   );
 }
 
