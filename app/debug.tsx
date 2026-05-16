@@ -1,9 +1,9 @@
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Keyboard, Platform } from 'react-native';
 import { StyleSheet } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WebView } from 'react-native-webview';
+import { router } from 'expo-router';
 import rawData from '../assets/questions/algebra/exponents/expansion.json';
-import Katex from 'react-native-katex';
 import { CustomKeyboard } from '@/assets/custom_obs/keybaord';
 
 const advancedLayout = [
@@ -18,8 +18,26 @@ const advancedLayout = [
         { label: '2', value: '2', type: 'text' },
         { label: '3', value: '3', type: 'text' },
         { label: 'Fraction', value: '\\frac{}{}', type: 'special', width: 100 }
+    ],
+    [
+        { label: '4', value: '4', type: 'text' },
+        { label: '5', value: '5', type: 'text' },
+        { label: '6', value: '6', type: 'text' },
+        { label: '√', value: '\\sqrt{}', type: 'special', width: 80 }
+    ],
+    [
+        { label: '7', value: '7', type: 'text' },
+        { label: '8', value: '8', type: 'text' },
+        { label: '9', value: '9', type: 'text' },
+        { label: 'π', value: '\\pi', type: 'special', width: 80 }
+    ],
+    [
+        { label: '0', value: '0', type: 'text' },
+        { label: '(', value: '(', type: 'text' },
+        { label: ')', value: ')', type: 'text' },
+        { label: '⌫', value: 'delete', type: 'command', width: 80 }
     ]
-]
+];
 
 interface Equation {
   eq: string;
@@ -58,27 +76,78 @@ const KatexWebView = ({ expression }: { expression: string }) => {
 
 export default function ExponentsPage() {
   const [latex, setLatex] = useState('');
-  const [equations, setEquations] = useState([]);
+  const [equations, setEquations] = useState<Equation[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
-  const [isZero, isNotZero] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const textInputRef = useRef<TextInput>(null);
+
   useEffect(() => {
-    if (rawData?.equations) setEquations(rawData.equations);
+    const data = rawData as EquationSet;
+    if (data?.equations) setEquations(data.equations);
   }, []);
 
   if (equations.length === 0) return <Text>Loading...</Text>;
 
   const current = equations[currentIndex];
 
-  const handleKeyPress = (key: string) => {
-    console.log(key);
-  }
+  const handleKeyPress = (key: string, type?: string) => {
+    if (key === 'delete' || (type === 'command' && key === 'delete')) {
+      setLatex(prev => prev.slice(0, -1));
+    } else {
+      setLatex(prev => prev + key);
+    }
+  };
+
+  const checkAnswer = () => {
+    const normalize = (s: string) => s.replace(/\s/g, '').toLowerCase();
+    if (normalize(latex) === normalize(current.answer)) {
+      alert('Correct! 🎉');
+    } else {
+      alert(`Incorrect. The correct answer is: ${current.answer}`);
+      setShowAnswer(true);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentIndex + 1 < equations.length) {
+      setCurrentIndex(currentIndex + 1);
+      setLatex('');
+      setShowAnswer(false);
+    } else {
+      alert('Congratulations! You\'ve completed all questions!');
+      router.back();
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+      setLatex('');
+      setShowAnswer(false);
+    }
+  };
+
+  const focusTextInput = () => {
+    // Show custom keyboard
+    setIsKeyboardVisible(true);
+    // Focus the TextInput to show cursor but prevent system keyboard
+    textInputRef.current?.focus();
+  };
+
+  const dismissKeyboard = () => {
+    setIsKeyboardVisible(false);
+    textInputRef.current?.blur();
+  };
 
   return (
-    <ScrollView style={{ flex: 2, padding: 20, backgroundColor: '#FDF5E6' }}>
-      
-      {/* Header with Title */}
-       <View style={styles.header}>
+    <View style={{ flex: 1, backgroundColor: '#FDF5E6' }}>
+      <ScrollView 
+        style={{ flex: 1, padding: 20 }}
+        contentContainerStyle={{ paddingBottom: isKeyboardVisible ? 320 : 20 }} // Add space when keyboard is visible
+      >
+        {/* Header with Title */}
+        <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
@@ -86,136 +155,107 @@ export default function ExponentsPage() {
           <View style={styles.placeholder} />
         </View>
 
-      {/* Question Card
-      <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 20, marginBottom: 20 }}>
-        <Text style={{ fontSize: 12, color: '#8B4513' }}>{current.level}</Text>
-        <Text style={{ fontSize: 16, fontStyle: 'italic', marginVertical: 8 }}>{current.technique}</Text>
-        <Text style={{ fontSize: 14, marginBottom: 16 }}>{current.description}</Text>
-        <KatexWebView expression={current.eq} />
-      </View> */}
-     <View style={styles.questionCard}>
-        <View style={styles.questionHeader}>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelText}>{current.level}</Text>
+        {/* Question Card */}
+        <View style={styles.questionCard}>
+          <View style={styles.questionHeader}>
+            <View style={styles.levelBadge}>
+              <Text style={styles.levelText}>{current.level}</Text>
+            </View>
+            <Text style={styles.techniqueText}>{current.technique}</Text>
           </View>
-          <Text style={styles.techniqueText}>{current.technique}</Text>
+          
+          <Text style={styles.descriptionText}>{current.description}</Text>
+          
+          <View style={styles.equationContainer}>
+            <KatexWebView expression={current.eq} />
+          </View>
         </View>
-        
-        <Text style={styles.descriptionText}>{current.description}</Text>
-        
-        <View style={styles.equationContainer}>
-          <KatexWebView expression={current.eq}/>
-        </View>
-      </View>
 
-      {/* Answer Card */}
-      <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>Your Answer</Text>
-        
-        <TextInput
-          style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 12, padding: 12, minHeight: 80 }}
-          value={latex}
-          onChangeText={setLatex}
-          placeholder="Enter answer..."
-          multiline
-        />
-        {/* Live Preview */}
-        {latex ? (
-          <View style={styles.previewContainer}>
-            <Text style={styles.previewLabel}>Preview:</Text>
-            <View style={styles.katexContainer}>
-              <KatexWebView
-                expression={latex}
-                // displayMode={true}
-                // throwOnError={false}
-                // errorColor="#cc0000"
+        {/* Answer Card */}
+        <View style={styles.answerCard}>
+          <Text style={styles.sectionTitle}>Your Answer</Text>
+          
+          {/* TextInput - tap this to show custom keyboard */}
+          <TouchableOpacity onPress={focusTextInput} activeOpacity={0.7}>
+            <View pointerEvents="none"> {/* Make TextInput non-editable directly */}
+              <TextInput
+                ref={textInputRef}
+                style={styles.mathInput}
+                value={latex}
+                placeholder="Tap here to show keyboard..."
+                placeholderTextColor="#999"
+                editable={false} // Make it non-editable to prevent system keyboard
+                showSoftInputOnFocus={false} // Prevent system keyboard
+                multiline
               />
             </View>
-          </View>
-        ) : null}
-        {/* {showAnswer && (
-          <View style={{ marginTop: 16, padding: 12, backgroundColor: '#e8f5e9', borderRadius: 12 }}>
-            <Text>Correct Answer:</Text>
-            <KatexWebView expression={current.answer} />
-          </View>
-        )} */}
-
-        <TouchableOpacity 
-          style={{ backgroundColor: '#4CAF50', padding: 14, borderRadius: 12, marginTop: 20 }}
-          onPress={() => {
-            const normalize = (s: string) => s.replace(/\s/g, '').toLowerCase();
-            if (normalize(latex) === normalize(current.answer)) {
-              alert('Correct! 🎉');
-            } else {
-              alert(`Incorrect. Answer: ${current.answer}`);
-              setShowAnswer(true);
-            }
-          }}>
-          <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>✓ Check Answer</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={{ backgroundColor: '#8B4513', padding: 14, borderRadius: 12, marginTop: 12 }}
-          onPress={() => {
-            if (currentIndex + 1 < equations.length) {
-              setCurrentIndex(currentIndex + 1);
-              setLatex('');
-              setShowAnswer(false);
-            } else {
-              alert('Complete!');
-            }
-          }}>
-          <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>→ Next Question</Text>
-        </TouchableOpacity>
-       <TouchableOpacity 
-          disabled={currentIndex == 0}
-          style={{ backgroundColor: '#8B4513', padding: 14, borderRadius: 12, marginTop: 12 }}
-          onPress={() => {
-            setCurrentIndex(currentIndex - 1);
-            setLatex('');
-            setShowAnswer(false);
-          }}>
-          <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold'}}> Previous Question</Text>
-        </TouchableOpacity>
-        <CustomKeyboard 
-          layout={advancedLayout}
-          onKeyPress={handleKeyPress}
-          activeKeyColor="#8B4513"
-          inactiveKeyColor="#F5E6D3"
-          textColor="#2C1810"
-          keyBorderRadius={12}
-          keySpacing={8}
-          showDeleteKey={true}
-          deleteKeyLabel="⌫ Delete"
-          showClearKey={true}
-          clearKeyLabel="Clear All"
-          showSpaceKey={true}
-          spaceKeyLabel="Space"
-          onDelete={() => setLatex(prev => prev.slice(0, -1))}
-          onClear={() => setLatex('')}
-          onSpace={() => setLatex(prev => prev + ' ')}
-          keyStyle={{
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 3,
-          }}
-      />
+          </TouchableOpacity>
           
-      </View>
-    </ScrollView>
-    
+          {/* Live Preview */}
+          {latex ? (
+            <View style={styles.previewContainer}>
+              <Text style={styles.previewLabel}>Preview:</Text>
+              <View style={styles.katexContainer}>
+                <KatexWebView expression={latex} />
+              </View>
+            </View>
+          ) : null}
+
+          {/* Answer Display */}
+          {showAnswer && (
+            <View style={styles.answerDisplayContainer}>
+              <Text style={styles.answerDisplayLabel}>Correct Answer:</Text>
+              <View style={styles.answerDisplayBox}>
+                <KatexWebView expression={current.answer} />
+              </View>
+            </View>
+          )}
+
+          {/* Action Buttons */}
+          <View style={styles.buttonGroup}>
+            <TouchableOpacity style={[styles.button, styles.checkButton]} onPress={checkAnswer}>
+              <Text style={styles.buttonText}>✓ Check Answer</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.button, styles.hintButton]} onPress={() => setShowAnswer(true)}>
+              <Text style={styles.buttonText}>💡 Show Answer</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={[styles.button, styles.nextButton]} onPress={handleNextQuestion}>
+            <Text style={styles.buttonText}>
+              {currentIndex + 1 === equations.length ? '🏁 Finish' : '→ Next Question'}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            disabled={currentIndex === 0}
+            style={[styles.button, styles.previousButton, currentIndex === 0 && styles.disabledButton]} 
+            onPress={handlePreviousQuestion}>
+            <Text style={styles.buttonText}>← Previous Question</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Custom Keyboard - Slides up from bottom when visible */}
+      {isKeyboardVisible && (
+        <View style={styles.customKeyboardContainer}>
+          <View style={styles.keyboardHeader}>
+            <TouchableOpacity onPress={dismissKeyboard} style={styles.dismissButton}>
+              <Text style={styles.dismissText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+          <CustomKeyboard 
+            layout={advancedLayout as any}
+            onKeyPress={handleKeyPress}
+          />
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  safeArea: { flex: 1 },
-  container: { 
-    padding: 20,
-    paddingBottom: 40,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -286,10 +326,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   equationContainer: {
-    // backgroundColor: '#FDF8F2',
     borderRadius: 16,
     padding: 24,
-    // alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#F0E0D0',
@@ -298,6 +336,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.97)',
     borderRadius: 24,
     padding: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -396,10 +435,55 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 2,
+    marginBottom: 12,
+  },
+  previousButton: {
+    backgroundColor: '#6d6d6d',
+    shadowColor: '#6d6d6d',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '700',
+  },
+  customKeyboardContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#E8D5B7',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  keyboardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8D5B7',
+    backgroundColor: '#F5E6D3',
+  },
+  dismissButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#8B4513',
+    borderRadius: 8,
+  },
+  dismissText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
