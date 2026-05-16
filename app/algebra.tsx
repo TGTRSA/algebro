@@ -14,10 +14,10 @@ const colors = {
 };
 
 const topics = [
-  { name: 'Basic Algebra', page: 'basic', icon: '𝑥', description: 'Learn the fundamentals' },
+  { name: 'Solve for x', page: 'basic', icon: '𝑥', description: 'Learn the fundamentals' },
   { name: 'Quadratic Equations', page: 'quadratic', icon: '𝑥²', description: 'Master the parabola' },
-  { name: 'Factoring', page: 'factoring', icon: '✕', description: 'Break it down' },
-  { name: 'Exponents', page: 'exponents', icon: '⁴', description: 'Power up your math' },
+  { name: 'Factoring', page: 'factoring', icon: 'xx', description: 'Break it down' },
+  { name: 'Exponents', page: 'exponents', icon: 'x⁴', description: 'Power up your math' },
 ];
 
 export default function Algebra() {

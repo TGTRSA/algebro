@@ -8,34 +8,40 @@ import { CustomKeyboard } from '@/assets/custom_obs/keybaord';
 
 const advancedLayout = [
     [
-        { label: 'x', value: 'x', type: 'text' },
-        { label: 'y', value: 'y', type: 'text' },
-        { label: 'Power', value: '^', type: 'special', width: 80 },
-        { label: 'Sub', value: '_', type: 'special', width: 80 }
+      { label: 'di', value: '\\frac{}{}', type: 'special'},
+      { label: '⌫', value: 'delete', type: 'command', width: 80 },
+      { label: 'x', value: '\\cdot', type: 'special', width: 80 }
+
     ],
+    // [
+    //     { label: 'x', value: 'x', type: 'text' },
+    //     { label: 'y', value: 'y', type: 'text' },
+    //     { label: '^', value: '^', type: 'special', width: 20 },
+    //     { label: '-', value: '_', type: 'special', width: 20 }
+    // ],
     [
-        { label: '1', value: '1', type: 'text' },
-        { label: '2', value: '2', type: 'text' },
-        { label: '3', value: '3', type: 'text' },
-        { label: 'Fraction', value: '\\frac{}{}', type: 'special', width: 100 }
+        { label: '7', value: '1', type: 'text' },
+        { label: '8', value: '2', type: 'text' },
+        { label: '9', value: '3', type: 'text' },
+        { label: '\\frac', value: '\\frac{}{}', type: 'special', width: 20 }
     ],
     [
         { label: '4', value: '4', type: 'text' },
         { label: '5', value: '5', type: 'text' },
         { label: '6', value: '6', type: 'text' },
-        { label: '√', value: '\\sqrt{}', type: 'special', width: 80 }
+        { label: '√', value: '\\sqrt{}', type: 'special', width: 20 }
     ],
     [
-        { label: '7', value: '7', type: 'text' },
-        { label: '8', value: '8', type: 'text' },
-        { label: '9', value: '9', type: 'text' },
+        { label: '1', value: '7', type: 'text' },
+        { label: '2', value: '8', type: 'text' },
+        { label: '3', value: '9', type: 'text' },
         { label: 'π', value: '\\pi', type: 'special', width: 80 }
     ],
     [
-        { label: '0', value: '0', type: 'text' },
-        { label: '(', value: '(', type: 'text' },
-        { label: ')', value: ')', type: 'text' },
-        { label: '⌫', value: 'delete', type: 'command', width: 80 }
+        { label: '.', value: '0', type: 'text' },
+        { label: '0', value: '(', type: 'text' },
+        { label: '=', value: ')', type: 'text' },
+        {label: 'e', value: 'ex', type: 'text'}
     ]
 ];
 
