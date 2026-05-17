@@ -4,11 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
 import rawData from '../assets/questions/algebra/exponents/expansion.json';
+import progressData from '../assets/progress/progress_data.json';
 import { CustomKeyboard } from '@/assets/custom_obs/keybaord';
+import Katex from 'react-native-katex';
 
-const advancedLayout = [
+const advancedLayout1 = [
     [
       { label: 'di', value: '\\frac{}{}', type: 'special'},
+      { label: 'x', value: '\\cdot', type: 'special'},
       { label: 'x', value: '\\cdot', type: 'special', width: 20 },
       { label: '⌫', value: 'delete', type: 'command', width: 20 },
 
@@ -44,7 +47,14 @@ const advancedLayout = [
         { label: '/', value: 'delete', type: 'command', width: 20 }
     ]
 ];
+const symbolsLayout = [
+  [
+    {label: <Katex expression='\int'/>, value: '\\int', type: 'special', width:20},
+  ],
+  [
 
+  ]
+];
 interface Equation {
   eq: string;
   level: string;
@@ -52,7 +62,12 @@ interface Equation {
   description: string;
   answer: string;
 }
-
+interface Topic { 
+    name: string[],
+};
+interface TopicPorgress {
+  topic: Topic,
+}
 interface EquationSet { 
   equations: Equation[];
 }
@@ -87,8 +102,11 @@ export default function ExponentsPage() {
   const [showAnswer, setShowAnswer] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const textInputRef = useRef<TextInput>(null);
+  const [topicsdata, setData] = useState<TopicPorgress[]>([]); 
+
 
   useEffect(() => {
+    const progdata = progressData as TopicPorgress;
     const data = rawData as EquationSet;
     if (data?.equations) setEquations(data.equations);
   }, []);
@@ -220,12 +238,12 @@ export default function ExponentsPage() {
           {/* Action Buttons */}
           <View style={styles.buttonGroup}>
             <TouchableOpacity style={[styles.button, styles.checkButton]} onPress={checkAnswer}>
-              <Text style={styles.buttonText}>✓ Check Answer</Text>
+              <Text style={styles.buttonText}> Check Answer</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={[styles.button, styles.hintButton]} onPress={() => setShowAnswer(true)}>
+            {/* <TouchableOpacity style={[styles.button, styles.hintButton]} onPress={() => setShowAnswer(true)}>
               <Text style={styles.buttonText}>💡 Show Answer</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           <TouchableOpacity style={[styles.button, styles.nextButton]} onPress={handleNextQuestion}>
@@ -244,7 +262,7 @@ export default function ExponentsPage() {
       </ScrollView>
 
       {/* Custom Keyboard - Slides up from bottom when visible */}
-      {isKeyboardVisible && (
+      {/* {isKeyboardVisible && (
         <View style={styles.customKeyboardContainer}>
           <View style={styles.keyboardHeader}>
             <TouchableOpacity onPress={dismissKeyboard} style={styles.dismissButton}>
@@ -256,7 +274,7 @@ export default function ExponentsPage() {
             onKeyPress={handleKeyPress}
           />
         </View>
-      )}
+      )} */}
     </View>
   );
 }

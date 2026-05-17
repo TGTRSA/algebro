@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   key: {
     backgroundColor: "white",
-    padding: 12,
+    padding: 5,
     minWidth: 45,
     alignItems: "center",
     marginHorizontal: 3,
