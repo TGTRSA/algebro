@@ -1,9 +1,18 @@
+// The server will only i think for now handle json data:
+// Folder 1:  ../assets/quesitons/{topic}/{level}/{level}/{subtopic}
+// Folder 2: ../assets/progress/{topic}
+// The structure for this data will be /operaiton$level
+
+
 #include <microhttpd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include "parser.h"
+
 
 #define PORT 8888
 
@@ -31,6 +40,8 @@ enum MHD_Result handle_request(void *cls, struct MHD_Connection *connection,
     
     log_connection(method, url, ip);
     
+    route(url);
+
     // Response
     const char *response_msg = "HELLO FROM MHD\n";
     struct MHD_Response *response = MHD_create_response_from_buffer(
