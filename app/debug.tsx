@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { PieChart } from 'react-native-chart-kit';
+import { PieChart } from "react-native-chart-kit";
+
+
 import {
   Modal,
   ScrollView,
@@ -11,14 +13,15 @@ import {
   View,
   Dimensions,
 } from "react-native";
+
 import { WebView } from "react-native-webview";
+
 import progressData from "../assets/progress/expansion.json";
 import rawData from "../assets/questions/algebra/exponents/expansion.json";
 import { CustomKeyboard } from "../assets/custom_obs/keybaord";
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get("window").width;
 
-// FIRST KEYBOARD LAYOUT
 const advancedLayout = [
   [
     { label: "∫", value: "\\int", type: "special" },
@@ -50,12 +53,8 @@ const advancedLayout = [
     { label: ")", value: ")", type: "text" },
     { label: "*", value: "\\cdot", type: "text", width: 20 },
   ],
-  [
-    {label: " ", value: " ", type:"text", width: 80},
-  ]
 ];
 
-// SECOND KEYBOARD LAYOUT - SYMBOLS LAYOUT
 const symbolsLayout = [
   [
     { label: "∑", value: "\\sum", type: "special", width: 20 },
@@ -68,21 +67,6 @@ const symbolsLayout = [
     { label: "β", value: "\\beta", type: "special", width: 20 },
     { label: "γ", value: "\\gamma", type: "special", width: 20 },
     { label: "δ", value: "\\delta", type: "special", width: 20 },
-  ],
-  [
-    { label: "∞", value: "\\infty", type: "special", width: 20 },
-    { label: "∂", value: "\\partial", type: "special", width: 20 },
-    { label: "∇", value: "\\nabla", type: "special", width: 20 },
-    { label: "∈", value: "\\in", type: "special", width: 20 },
-  ],
-  [
-    { label: "≤", value: "\\leq", type: "special", width: 20 },
-    { label: "≥", value: "\\geq", type: "special", width: 20 },
-    { label: "≠", value: "\\neq", type: "special", width: 20 },
-    { label: "≈", value: "\\approx", type: "special", width: 20 },
-  ],
-  [
-    { label: "⌫", value: "delete", type: "command", width: 20 },
   ],
 ];
 
@@ -98,17 +82,13 @@ interface EquationSet {
   equations: Equation[];
 }
 
-// Chart configuration for PieChart
 const chartConfig = {
-  backgroundColor: '#ffffff',
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#ffffff',
+  backgroundColor: "#ffffff",
+  backgroundGradientFrom: "#ffffff",
+  backgroundGradientTo: "#ffffff",
   decimalPlaces: 0,
-  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  style: {
-    borderRadius: 16,
-  },
+  color: (opacity = 1) => `rgba(0,0,0,${opacity})`,
+  labelColor: (opacity = 1) => `rgba(0,0,0,${opacity})`,
 };
 
 const KatexWebView = ({ expression }: { expression: string }) => {
@@ -120,19 +100,29 @@ const KatexWebView = ({ expression }: { expression: string }) => {
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
       <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     </head>
-    <body style="margin: 0; padding: 12px; background: white; display: flex; justify-content: center; align-items: center;">
+    <body style="margin:0;padding:12px;background:white;display:flex;justify-content:center;align-items:center;">
       <div id="math"></div>
+
       <script>
-        katex.render("${expression.replace(/\\/g, "\\\\")}", document.getElementById('math'), {
-          displayMode: true,
-          throwOnError: false
-        });
+        katex.render(
+          "${expression.replace(/\\/g, "\\\\")}",
+          document.getElementById('math'),
+          {
+            displayMode: true,
+            throwOnError: false
+          }
+        );
       </script>
     </body>
     </html>
   `;
+
   return (
-    <WebView source={{ html }} style={{ height: 80 }} scrollEnabled={false} />
+    <WebView
+      source={{ html }}
+      style={{ height: 80 }}
+      scrollEnabled={false}
+    />
   );
 };
 
@@ -142,21 +132,34 @@ export default function ExponentsPage() {
   const [equations, setEquations] = useState<Equation[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
+
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [currentKeyboard, setCurrentKeyboard] = useState<'main' | 'symbols'>('main');
+  const [currentKeyboard, setCurrentKeyboard] =
+    useState<"main" | "symbols">("main");
+
   const textInputRef = useRef<TextInput>(null);
 
+  const [message, setMessage] = useState("");
+  const [input, setInput] = useState("Expo");
+
+
+  // LOAD QUESTIONS
   useEffect(() => {
     const data = rawData as EquationSet;
-    if (data?.equations) setEquations(data.equations);
+
+    if (data?.equations) {
+      setEquations(data.equations);
+    }
   }, []);
 
-  if (equations.length === 0) return <Text>Loading...</Text>;
+  if (equations.length === 0) {
+    return <Text>Loading...</Text>;
+  }
 
   const current = equations[currentIndex];
 
   const handleKeyPress = (key: string, type?: string) => {
-    if (key === "delete" || (type === "command" && key === "delete")) {
+    if (key === "delete" || type === "command") {
       setLatex((prev) => prev.slice(0, -1));
     } else {
       setLatex((prev) => prev + key);
@@ -164,12 +167,16 @@ export default function ExponentsPage() {
   };
 
   const checkAnswer = () => {
-    const normalize = (s: string) => s.replace(/\s/g, "").toLowerCase();
+    const normalize = (s: string) =>
+      s.replace(/\s/g, "").toLowerCase();
+
     if (normalize(latex) === normalize(current.answer)) {
-      alert("Correct! 🎉");
+      progressData.basic.correct += 1;
+
+      alert("Correct 🎉");
       setShowAnswer(false);
     } else {
-      alert(`Incorrect. The correct answer is: ${current.answer}`);
+      alert(`Incorrect. Correct answer: ${current.answer}`);
       setShowAnswer(true);
     }
   };
@@ -180,7 +187,7 @@ export default function ExponentsPage() {
       setLatex("");
       setShowAnswer(false);
     } else {
-      alert("Congratulations! You've completed all questions!");
+      alert("Completed!");
       router.back();
     }
   };
@@ -204,10 +211,11 @@ export default function ExponentsPage() {
   };
 
   const toggleKeyboard = () => {
-    setCurrentKeyboard(currentKeyboard === 'main' ? 'symbols' : 'main');
+    setCurrentKeyboard(
+      currentKeyboard === "main" ? "symbols" : "main"
+    );
   };
 
-  // Prepare pie chart data for each level
   const pieChartData = [
     {
       name: progressData.basic.level,
@@ -230,96 +238,76 @@ export default function ExponentsPage() {
     <View style={{ flex: 1, backgroundColor: "#FDF5E6" }}>
       <ScrollView
         style={{ flex: 1, padding: 20 }}
-        contentContainerStyle={{ paddingBottom: isKeyboardVisible ? 420 : 20 }}
+        contentContainerStyle={{
+          paddingBottom: isKeyboardVisible ? 420 : 20,
+        }}
       >
-        {/* Info Button with Modal */}
-        <View style={styles.infoButtonContainer}>
-          <TouchableOpacity 
-            style={styles.infoButton} 
-            onPress={() => setVisibleChart(true)}
-          >
-            <Text style={styles.infoButtonText}>📊 Statistics</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Modal for Pie Chart */}
+
+        {/* STATISTICS BUTTON */}
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => setVisibleChart(true)}
+        >
+          <Text style={styles.infoButtonText}>
+            📊 Statistics
+          </Text>
+        </TouchableOpacity>
+
+        {/* MODAL */}
         <Modal
           visible={visibleChart}
-          transparent={true}
+          transparent
           animationType="slide"
-          onRequestClose={() => setVisibleChart(false)}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Progress Statistics</Text>
-                <TouchableOpacity 
-                  onPress={() => setVisibleChart(false)}
-                  style={styles.closeButton}
-                >
-                  <Text style={styles.closeButtonText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              
-              <ScrollView>
-                {pieChartData.map((level, index) => {
-                  // Only create chart if there's data
-                  const hasData = level.correct > 0 || level.incorrect > 0;
-                  
-                  if (!hasData) {
-                    return (
-                      <View key={index} style={styles.chartContainer}>
-                        <Text style={styles.chartTitle}>{level.name}</Text>
-                        <Text style={styles.noDataText}>No data available yet</Text>
-                      </View>
-                    );
-                  }
-                  
-                  const pieData = [
-                    {
-                      name: `✅ Correct (${level.correct})`,
-                      count: level.correct,
-                      color: '#4CAF50',
-                      legendFontColor: '#333',
-                      legendFontSize: 12,
-                    },
-                    {
-                      name: `❌ Incorrect (${level.incorrect})`,
-                      count: level.incorrect,
-                      color: '#FF6B6B',
-                      legendFontColor: '#333',
-                      legendFontSize: 12,
-                    },
-                  ];
-                  
-                  return (
-                    <View key={index} style={styles.chartContainer}>
-                      <Text style={styles.chartTitle}>{level.name}</Text>
-                      <PieChart
-                        data={pieData}
-                        width={screenWidth - 80}
-                        height={200}
-                        chartConfig={chartConfig}
-                        accessor="count"
-                        backgroundColor="transparent"
-                        paddingLeft="15"
-                        absolute={true}
-                        hasLegend={true}
-                      />
-                      <View style={styles.statsRow}>
-                        <Text style={styles.correctText}>✅ Correct: {level.correct}</Text>
-                        <Text style={styles.incorrectText}>❌ Incorrect: {level.incorrect}</Text>
-                        <Text style={styles.totalText}>📊 Total: {level.correct + level.incorrect}</Text>
-                      </View>
-                    </View>
-                  );
-                })}
-              </ScrollView>
+              <TouchableOpacity
+                onPress={() => setVisibleChart(false)}
+              >
+                <Text style={{ fontSize: 20 }}>✕</Text>
+              </TouchableOpacity>
+
+              {pieChartData.map((level, index) => {
+                const pieData = [
+                  {
+                    name: "Correct",
+                    count: level.correct,
+                    color: "#4CAF50",
+                    legendFontColor: "#000",
+                    legendFontSize: 12,
+                  },
+                  {
+                    name: "Incorrect",
+                    count: level.incorrect,
+                    color: "#FF6B6B",
+                    legendFontColor: "#000",
+                    legendFontSize: 12,
+                  },
+                ];
+
+                return (
+                  <View key={index}>
+                    <Text>{level.name}</Text>
+
+                    <PieChart
+                      data={pieData}
+                      width={screenWidth - 80}
+                      height={200}
+                      chartConfig={chartConfig}
+                      accessor="count"
+                      backgroundColor="transparent"
+                      paddingLeft="15"
+                      absolute
+                    />
+                  </View>
+                );
+              })}
             </View>
           </View>
         </Modal>
 
-        {/* Header with Title */}
+        {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -327,110 +315,97 @@ export default function ExponentsPage() {
           >
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
+
           <Text style={styles.title}>Algebra</Text>
+
           <View style={styles.placeholder} />
         </View>
 
-        {/* Question Card */}
+        {/* QUESTION */}
         <View style={styles.questionCard}>
-          <View style={styles.questionHeader}>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>{current.level}</Text>
-            </View>
-            <Text style={styles.techniqueText}>{current.technique}</Text>
-          </View>
+          <Text style={styles.descriptionText}>
+            {current.description}
+          </Text>
 
-          <Text style={styles.descriptionText}>{current.description}</Text>
-
-          <View style={styles.equationContainer}>
-            <KatexWebView expression={current.eq} />
-          </View>
+          <KatexWebView expression={current.eq} />
         </View>
 
-        {/* Answer Card */}
+        {/* ANSWER */}
         <View style={styles.answerCard}>
-          <Text style={styles.sectionTitle}>Your Answer</Text>
-
-          <TouchableOpacity onPress={focusTextInput} activeOpacity={0.7}>
+          <TouchableOpacity onPress={focusTextInput}>
             <TextInput
               ref={textInputRef}
               style={styles.mathInput}
               value={latex}
-              placeholder="Tap here to show keyboard..."
-              placeholderTextColor="#999"
-              editable={true}
-              showSoftInputOnFocus={false}
+              editable={false}
               multiline
             />
           </TouchableOpacity>
 
           {latex ? (
-            <View style={styles.previewContainer}>
-              <Text style={styles.previewLabel}>Preview:</Text>
-              <View style={styles.katexContainer}>
-                <KatexWebView expression={latex} />
-              </View>
-            </View>
+            <KatexWebView expression={latex} />
           ) : null}
 
-          {showAnswer && (
-            <View style={styles.answerDisplayContainer}>
-              <Text style={styles.answerDisplayLabel}>Correct Answer:</Text>
-              <View style={styles.answerDisplayBox}>
-                <KatexWebView expression={current.answer} />
-              </View>
-            </View>
-          )}
-
-          <View style={styles.buttonGroup}>
-            <TouchableOpacity
-              style={[styles.button, styles.checkButton]}
-              onPress={checkAnswer}
-            >
-              <Text style={styles.buttonText}>✓ Check Answer</Text>
-            </TouchableOpacity>
-          </View>
+          {showAnswer ? (
+            <KatexWebView expression={current.answer} />
+          ) : null}
 
           <TouchableOpacity
-            style={[styles.button, styles.nextButton]}
-            onPress={handleNextQuestion}
+            style={styles.checkButton}
+            onPress={checkAnswer}
           >
             <Text style={styles.buttonText}>
-              {currentIndex + 1 === equations.length
-                ? "🏁 Finish"
-                : "→ Next Question"}
+              Check Answer
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            disabled={currentIndex === 0}
-            style={[
-              styles.button,
-              styles.previousButton,
-              currentIndex === 0 && styles.disabledButton,
-            ]}
+            style={styles.nextButton}
+            onPress={handleNextQuestion}
+          >
+            <Text style={styles.buttonText}>
+              Next Question
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.previousButton}
             onPress={handlePreviousQuestion}
           >
-            <Text style={styles.buttonText}>← Previous Question</Text>
+            <Text style={styles.buttonText}>
+              Previous Question
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* Custom Keyboard */}
+      {/* CUSTOM KEYBOARD */}
       {isKeyboardVisible && (
         <View style={styles.customKeyboardContainer}>
           <View style={styles.keyboardHeader}>
-            <TouchableOpacity onPress={toggleKeyboard} style={styles.switchButton}>
+            <TouchableOpacity
+              onPress={toggleKeyboard}
+              style={styles.switchButton}
+            >
               <Text style={styles.switchButtonText}>
-                {currentKeyboard === 'main' ? '🔣 Symbols' : '🔤 Main'}
+                Switch
               </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={dismissKeyboard} style={styles.dismissButton}>
+
+            <TouchableOpacity
+              onPress={dismissKeyboard}
+              style={styles.dismissButton}
+            >
               <Text style={styles.dismissText}>Done</Text>
             </TouchableOpacity>
           </View>
-          <CustomKeyboard 
-            layout={currentKeyboard === 'main' ? advancedLayout : symbolsLayout}
+
+          <CustomKeyboard
+            layout={
+              currentKeyboard === "main"
+                ? advancedLayout
+                : symbolsLayout
+            }
             onKeyPress={handleKeyPress}
           />
         </View>
@@ -445,328 +420,138 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 24,
-    width: "100%",
   },
+
   title: {
     fontSize: 32,
     fontWeight: "700",
     color: "#8B4513",
-    letterSpacing: 0.5,
   },
+
   backButton: {
-    backgroundColor: "rgba(139, 69, 19, 0.1)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    backgroundColor: "#ddd",
+    padding: 10,
+    borderRadius: 10,
   },
+
   backText: {
-    color: "#8B4513",
-    fontSize: 16,
-    fontWeight: "600",
+    color: "#000",
   },
+
   placeholder: {
     width: 60,
   },
-  infoButtonContainer: {
-    alignItems: "flex-end",
-    marginBottom: 10,
-  },
-  infoButton: {
-    backgroundColor: "rgba(139, 69, 19, 0.1)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  infoButtonText: {
-    color: "#8B4513",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 24,
-    padding: 20,
-    width: "90%",
-    maxHeight: "80%",
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8D5B7",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#8B4513",
-  },
-  closeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#F5E6D3",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: "#8B4513",
-    fontWeight: "bold",
-  },
-  chartContainer: {
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: "#FDF8F2",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#F0E0D0",
-  },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#8B4513",
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  statsRow: {
-    marginTop: 12,
-    alignItems: "center",
-    gap: 4,
-  },
-  correctText: {
-    fontSize: 14,
-    color: "#4CAF50",
-    fontWeight: "600",
-  },
-  incorrectText: {
-    fontSize: 14,
-    color: "#FF6B6B",
-    fontWeight: "600",
-  },
-  totalText: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "600",
-  },
-  noDataText: {
-    textAlign: "center",
-    color: "#999",
-    fontSize: 14,
-    padding: 20,
-  },
+
   questionCard: {
     backgroundColor: "white",
-    borderRadius: 24,
-    padding: 24,
+    padding: 20,
+    borderRadius: 20,
     marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
   },
-  questionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-    gap: 12,
-  },
-  levelBadge: {
-    backgroundColor: "#F5E6D3",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  levelText: {
-    color: "#8B4513",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  techniqueText: {
-    color: "#A0522D",
-    fontSize: 14,
-    fontWeight: "500",
-    fontStyle: "italic",
-  },
-  descriptionText: {
-    fontSize: 16,
-    color: "#2C1810",
-    lineHeight: 24,
-    marginBottom: 24,
-    fontWeight: "500",
-  },
-  equationContainer: {
-    borderRadius: 16,
-    padding: 24,
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#F0E0D0",
-  },
+
   answerCard: {
-    backgroundColor: "rgba(255, 255, 255, 0.97)",
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#8B4513",
-    marginBottom: 16,
-  },
-  mathInput: {
-    borderWidth: 2,
-    borderColor: "#E8D5B7",
-    borderRadius: 16,
-    padding: 16,
-    fontSize: 16,
-    fontFamily: "monospace",
-    backgroundColor: "#FFFFFF",
-    marginBottom: 20,
-    color: "#2C1810",
-    minHeight: 100,
-    textAlignVertical: "top",
-  },
-  previewContainer: {
-    marginBottom: 20,
-  },
-  previewLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#8B4513",
-    marginBottom: 8,
-  },
-  katexContainer: {
-    backgroundColor: "#FDF8F2",
-    borderRadius: 12,
-    padding: 16,
-    minHeight: 80,
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#F0E0D0",
-  },
-  answerDisplayContainer: {
-    marginBottom: 20,
-    padding: 16,
-    backgroundColor: "#F0F9F0",
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: "#C8E6C9",
-  },
-  answerDisplayLabel: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#2E7D32",
-    marginBottom: 12,
-  },
-  answerDisplayBox: {
     backgroundColor: "white",
-    borderRadius: 12,
-    padding: 16,
-    alignItems: "center",
+    padding: 20,
+    borderRadius: 20,
   },
-  buttonGroup: {
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 12,
+
+  descriptionText: {
+    fontSize: 18,
+    marginBottom: 20,
   },
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+
+  mathInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    minHeight: 80,
+    padding: 10,
+    marginBottom: 20,
   },
+
   checkButton: {
-    backgroundColor: "#4CAF50",
-    shadowColor: "#4CAF50",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: "green",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
   },
+
   nextButton: {
     backgroundColor: "#8B4513",
-    shadowColor: "#8B4513",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-    marginBottom: 12,
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
   },
+
   previousButton: {
-    backgroundColor: "#6d6d6d",
-    shadowColor: "#6d6d6d",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: "gray",
+    padding: 15,
+    borderRadius: 10,
   },
-  disabledButton: {
-    opacity: 0.5,
-  },
+
   buttonText: {
     color: "white",
-    fontSize: 16,
-    fontWeight: "700",
+    textAlign: "center",
+    fontWeight: "bold",
   },
+
   customKeyboardContainer: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: "#E8D5B7",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
   },
+
   keyboardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E8D5B7",
-    backgroundColor: "#F5E6D3",
   },
+
   switchButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
     backgroundColor: "#8B4513",
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 10,
   },
+
   switchButtonText: {
     color: "white",
-    fontSize: 14,
-    fontWeight: "600",
   },
+
   dismissButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
     backgroundColor: "#8B4513",
-    borderRadius: 8,
+    padding: 10,
+    borderRadius: 10,
   },
+
   dismissText: {
     color: "white",
-    fontSize: 14,
-    fontWeight: "600",
+  },
+
+  infoButton: {
+    backgroundColor: "#8B4513",
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+
+  infoButtonText: {
+    color: "white",
+    textAlign: "center",
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+
+  modalContent: {
+    backgroundColor: "white",
+    width: "90%",
+    borderRadius: 20,
+    padding: 20,
   },
 });
