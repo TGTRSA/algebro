@@ -9,7 +9,7 @@
 
 
 const char* questions_dir = "../assets/questions/";
-const char* progress_dir = "../assets/progress/expansion.json"; 
+const char* progress_dir = "../../assets/progress/expansion.json"; 
 
 void route(const char* req){
     size_t len_req = strlen(req);
@@ -17,16 +17,16 @@ void route(const char* req){
     size_t c_indx = 1;
     char* command = malloc(sizeof(char) * (len_req + 1));
     printf("[DEBUG] Length of request:  %zu\n", len_req);
-    while(req[c_indx]!='!'){
+    while(req[c_indx]!='!' && c_indx < len_req){
         command[buf_indx] = req[c_indx];
         buf_indx++;
         c_indx++;
-        if(c_indx==len_req-1){
-            printf("Routing error: separator never found");
-            exit(-1);
-        }
+        // if(c_indx==len_req-1){
+        //     printf("Routing error: separator never found");
+        //     exit(-1);
+        // }
     }
-        command[len_req] = '\0';
+    command[len_req] = '\0';
     printf("URL: %s\n", req);
     printf("Thing meant to be done: %s\n", command);
     if(strcmp(command,"inc_prog")==0){
