@@ -1,21 +1,14 @@
 {
-    "basic": 
-    {
-        "level": "basic",
-        "correct": 0,
-        "incorrect":0    
-    },     
-    "intermediate": 
-    {
-        "level": "intermediate",
-        "correct": 0,
-        "incorrect":0
-    },
-    "advanced": 
-    {
-        "level": "advanced",
-        "correct": 0,
-        "incorrect":0
-    }
-    
+  "basic":{
+    "correct":0,
+    "incorrect":0
+  },
+  "intermediate":{
+    "correct":0,
+    "incorrect":0
+  },
+  "advanced":{
+    "correct":0,
+    "incorrect":0
+  }
 }

@@ -17,7 +17,8 @@ import {
 import { WebView } from "react-native-webview";
 
 import progressData from "../assets/progress/expansion.json";
-import rawData from "../assets/questions/algebra/exponents/expansion.json";
+import rawData from "../assets/questions/algebra/basic/exponents.json" with {type: 'json'};
+
 import { CustomKeyboard } from "../assets/custom_obs/keybaord";
 
 const screenWidth = Dimensions.get("window").width;

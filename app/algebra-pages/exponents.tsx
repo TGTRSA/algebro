@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useCallback } from 'react';
 import Katex from 'react-native-katex';
-import rawData from "../../assets/questions/algebra/exponents/expansion.json" with {type: 'json'};
+import rawData from "../../assets/questions/algebra/basic/exponents.json" with {type: 'json'};
 
 const KatexWebView = ({ expression }: { expression: string }) => {
   const html = `
