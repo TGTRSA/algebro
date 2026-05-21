@@ -2,8 +2,10 @@
 #define PARSER
 // #include <cstddef>
 #include <sys/types.h>
+#include <sys/ucontext.h>
 #include "stddef.h"
 #include "stdint.h"
+#include "errno.h"
 #include "stdlib.h"
 #include "stdio.h"
 #include "math.h"
@@ -14,9 +16,10 @@
 
 // #include <cstdio>
 
-
-#define GREEN "\x1b[33m"
-#define RESET "\x1b[0m"
+typedef struct IncrementData {
+    const char *level;
+    size_t val;
+}IncrementData;
 
 void route(const char *req);
 
