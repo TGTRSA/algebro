@@ -19,8 +19,9 @@
 
 typedef struct CompletedQuestion {
     char* level;
+    char *topic;
     char* subtopic;
-    size_t indx;
+    size_t val;
 }question;
 
 typedef struct IncrementData {

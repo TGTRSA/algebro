@@ -1,11 +1,10 @@
 // each portion of the url shuold be thought to be separated by /
-// finished/topic=u/level=x/subtopic=y/index=z
+// *** finished/topic=u/level=x/subtopic=y/val=z 
+// ! => NOTE! val in the above indicates the index of the question in the json file 
 //  where index is which question to mark as complete
-// inc_prog/level=x/technique=y/val=z 
+// *** inc_prog/level=x/technique=y/val=z 
 // where val is whether to increment cirrect or incorrect
 #include "parser.h"
-#include "json_handler.h"
-
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -15,6 +14,10 @@
 const char* questions_dir = "../assets/questions/";
 const char* progress_dir = "../../assets/progress/expansion.json"; 
 const char* base_progress_dir = "../../assets/progress/"; 
+
+// an array of 'keys' to route the subsequent values of the 'urls' to 
+char *keys[] = {"level", "topic", "subtopic", "val", "technique"}; 
+
 
 char* compile_prog_dir(char* technique) {
     char* ext=".json";
@@ -31,14 +34,64 @@ char* compile_prog_dir(char* technique) {
     return dir;
 }
 
+
+// does the work of writing the buffer and associating it to whatever struct component necessary 
+//  ! NOTE: ONLY FOR STRINGS
+void write_data(char *d, size_t len_data) {
+
+}
+
+// *** finished/topic=u/level=x/subtopic=y/val=z 
 struct CompletedQuestion complete_question(char *req, size_t initial_bang_pos,size_t len_url) {
     question data;
+    size_t i, j, slash_indx, equal_pos;
+    slash_indx= initial_bang_pos+1;
+    for(i=slash_indx; i<len_url;i++){
+        if (req[i]=='=') {
+            equal_pos=i;
+        }
+        if (req[i]=='/' || i==len_url-1) {
+            // between slash_indx / and = -> key
+            size_t key_len = equal_pos-slash_indx;
+            // between i and equal sign is the value
+            size_t val_len = i-equal_pos;
+            // allocating space for both the key and value
+            char *key = malloc(key_len+1);
+            char *val = malloc(val_len);
+            // introducing some index for the buffer
+            j=0;
+            while(key_len+1){
+                key[j] = req[slash_indx];
+                *(&slash_indx)=slash_indx+1;
+            }
+            // reinit index
+            j=0;
+            while(val_len+1){
+                val[j] = req[slash_indx];
+                *(&slash_indx)=slash_indx+1;
+            }
+            // checking key and pairing it to struct components
+            // level
+            if(strcmp(key,keys[0])){
+                write_data(data.level, val_len);
+            }else if (strcmp(key,keys[1])) {
+                write_data(data.subtopic, val_len);
+            }else if (strcmp(key,keys[2])) {
+                write_data(data.subtopic, val_len);
+            }else if (strcmp(key,keys[3])) {
+                
+                // write_data(data.val, val_len);
+            }else {
+                printf("Key does not exist\n");
+                exit(-1);
+            }
+        }
+    }      
 
-      
     return data;
 }
 
-// url looks like: inc_prog/level=x/val=
+// url looks like: inc_prog/level=x/technique=y/val=z
 IncrementData parse_inc(const char *increment_instruction, const size_t initial_bang_pos, size_t len_url) {
     size_t i, j, equalsign, value;
     char c;
@@ -51,7 +104,7 @@ IncrementData parse_inc(const char *increment_instruction, const size_t initial_
         if (increment_instruction[i]=='='){
             equalsign = i;
         }
-        if (increment_instruction[i]=='!' || i==len_url-1) {
+        if (increment_instruction[i]=='/' || i==len_url-1) {
             // beginning of bang
             size_t i_indx = bang_indx;
             char *instruction = (char *)malloc((equalsign-bang_indx)+1);
@@ -113,7 +166,7 @@ IncrementData parse_inc(const char *increment_instruction, const size_t initial_
         }
 
     }
-    printf("\t[DEBUG]Level: %s\nIncrement: %zu\n", data.level, data.val);
+    printf("[DEBUG]Level: %s\nTechnique:%s \nValue: %zu\n", data.level,data.technique, data.val);
     return data;    
 }
 
@@ -125,7 +178,7 @@ void route(const char* req){
     printf("[DEBUG] Length of request:  %zu\n", len_req);
     
     // This returns only the inital command => routing
-    while(req[c_indx]!='!' && c_indx < len_req){
+    while(req[c_indx]!='/' && c_indx < len_req){
         command[buf_indx] = req[c_indx];
         buf_indx++;
         c_indx++;
@@ -141,7 +194,7 @@ void route(const char* req){
         printf("Incremenenting progress...\n");
         IncrementData d = parse_inc(req, c_indx, len_req);
         char* dir = compile_prog_dir(d.technique);
-        increment_prog(progress_dir, d.level,d.val);
+        // increment_prog(progress_dir, d.level,d.val);
         free(d.level);
         // increment_prog(progress_dir, "basic",0);
     }else if (strcmp(command,"finished")==0) {
