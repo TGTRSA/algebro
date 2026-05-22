@@ -18,7 +18,7 @@
 // #include <cstdio>
 
 typedef struct IncrementData {
-    char *level;
+    char* level;
     size_t val;
 }IncrementData;
 

@@ -5,7 +5,8 @@
 #include <stdlib.h>
 
 void increment_prog(const char *f, const char* level, size_t id) {
-    // 1. Read file
+    printf("\t[DEBUG]level(%s) value(%zu)\n", level, id);
+        // 1. Read file
     FILE *fp = fopen(f, "r");
     if (!fp) {
         printf("Failed to open file\n");
@@ -48,7 +49,7 @@ void increment_prog(const char *f, const char* level, size_t id) {
     int new_val = old_val + 1;
     json_object_set_int(counter, new_val);  // ACTUALLY MODIFY IT
     
-    printf("[DEBUG] Previous value: %d\nCurrent val: %d\n", old_val, new_val);
+    printf("[DEBUG]Previous value: %d\n[DEBUG]Current val: %d\n", old_val, new_val);
     
     // 4. Write back
     json_object_to_file_ext(f, root, JSON_C_TO_STRING_PRETTY);
