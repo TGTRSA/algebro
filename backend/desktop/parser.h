@@ -12,12 +12,13 @@
 #include "stdbool.h"
 #include "json_handler.h"
 #include "string.h"
+
 #pragma once
 
 // #include <cstdio>
 
 typedef struct IncrementData {
-    const char *level;
+    char *level;
     size_t val;
 }IncrementData;
 
