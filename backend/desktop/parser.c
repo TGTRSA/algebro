@@ -1,6 +1,8 @@
-// each portion of the url shuold be thought to be separated by !
-// example: finished!level=x!subtopic=y!index=z
-// example: inc_prog!subtopic=x and so on
+// each portion of the url shuold be thought to be separated by /
+// finished/topic=u/level=x/subtopic=y/index=z
+//  where index is which question to mark as complete
+// inc_prog/level=x/technique=y/val=z 
+// where val is whether to increment cirrect or incorrect
 #include "parser.h"
 #include "json_handler.h"
 
@@ -10,13 +12,34 @@
 #include <stdlib.h>
 #include <string.h>
 
-
-
 const char* questions_dir = "../assets/questions/";
 const char* progress_dir = "../../assets/progress/expansion.json"; 
+const char* base_progress_dir = "../../assets/progress/"; 
 
-// url looks like: increment!level=x!val=
-void parse_inc(const char *increment_instruction, const size_t initial_bang_pos, size_t len_url) {
+char* compile_prog_dir(char* technique) {
+    char* ext=".json";
+    size_t len_filename = strlen(technique ) +strlen(ext);
+    char *filename = malloc( len_filename+1);
+    // starting filename name
+    strcpy(filename,technique);
+    // adding extension 
+    strcat(filename,ext);
+    filename[len_filename]= '\0';
+    size_t len_dir = strlen(filename)+strlen(base_progress_dir);
+    char *dir = malloc(+1);
+    dir[len_dir]='\0';
+    return dir;
+}
+
+struct CompletedQuestion complete_question(char *req, size_t initial_bang_pos,size_t len_url) {
+    question data;
+
+      
+    return data;
+}
+
+// url looks like: inc_prog/level=x/val=
+IncrementData parse_inc(const char *increment_instruction, const size_t initial_bang_pos, size_t len_url) {
     size_t i, j, equalsign, value;
     char c;
     char *endptr;
@@ -44,6 +67,7 @@ void parse_inc(const char *increment_instruction, const size_t initial_bang_pos,
             printf("\t[DEBUG]Instruction: %s\n",instruction);
             printf("\t[DEBUG]i(%zu)-equalsign(%zu)\n", i,equalsign); 
             char *b;   
+            // compiling value manually
             if(i==len_url-1){
                 data.val = strtoull(&increment_instruction[equalsign+1], &endptr, 10);
                 break;
@@ -66,6 +90,19 @@ void parse_inc(const char *increment_instruction, const size_t initial_bang_pos,
                 data.level = malloc(strlen(b) + 1);
                 strcpy(data.level, b);
                 printf("\t[DEBUG]Level: %s\n", data.level);
+            }else if (strcmp("technique",instruction)==0) {
+                size_t start = equalsign+1;
+                j = 0;
+                while(start < i){
+                    b[j] = increment_instruction[start];
+                    j++;
+                    start++;
+                }
+                b[j] = '\0';  // USE j, NOT i-equalsign
+                
+                data.technique = malloc(strlen(b) + 1);
+                strcpy(data.level, b);
+                printf("\t[DEBUG]Level: %s\n", data.level);
             }else{
                 printf("Invalid instruction in inc_prog\n");
                 exit(-1);
@@ -77,8 +114,7 @@ void parse_inc(const char *increment_instruction, const size_t initial_bang_pos,
 
     }
     printf("\t[DEBUG]Level: %s\nIncrement: %zu\n", data.level, data.val);
-    increment_prog(progress_dir, data.level,data.val);
-    free(data.level);  
+    return data;    
 }
 
 void route(const char* req){
@@ -103,7 +139,10 @@ void route(const char* req){
     printf("Thing meant to be done: %s\n", command);
     if(strcmp(command,"inc_prog")==0){
         printf("Incremenenting progress...\n");
-        parse_inc(req, c_indx, len_req);
+        IncrementData d = parse_inc(req, c_indx, len_req);
+        char* dir = compile_prog_dir(d.technique);
+        increment_prog(progress_dir, d.level,d.val);
+        free(d.level);
         // increment_prog(progress_dir, "basic",0);
     }else if (strcmp(command,"finished")==0) {
         ;
