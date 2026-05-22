@@ -37,15 +37,27 @@ char* compile_prog_dir(char* technique) {
 
 // does the work of writing the buffer and associating it to whatever struct component necessary 
 //  ! NOTE: ONLY FOR STRINGS
-void write_data(char *d, size_t len_data) {
-
+void write_data(char **d, size_t len_data, char* str_to_write) {
+    char *b = malloc(len_data+1);
+    size_t i=0;
+    while (len_data+1!=0) {
+        b[i] = str_to_write[i]; 
+        len_data-=1;
+        i++;
+    }
+    b[len_data] = '\0';
+    *d = malloc(strlen(b)+1);
+    strcpy(*d, b);
+    printf("\t[DEBUG]Wrote %s to struct\n", *d);
+    free(b);
 }
 
 // *** finished/topic=u/level=x/subtopic=y/val=z 
-struct CompletedQuestion complete_question(char *req, size_t initial_bang_pos,size_t len_url) {
+struct CompletedQuestion complete_question(const char *req, size_t initial_bang_pos,size_t len_url) {
     question data;
     size_t i, j, slash_indx, equal_pos;
     slash_indx= initial_bang_pos+1;
+    char *endptr;
     for(i=slash_indx; i<len_url;i++){
         if (req[i]=='=') {
             equal_pos=i;
@@ -53,41 +65,54 @@ struct CompletedQuestion complete_question(char *req, size_t initial_bang_pos,si
         if (req[i]=='/' || i==len_url-1) {
             // between slash_indx / and = -> key
             size_t key_len = equal_pos-slash_indx;
+            
+            printf("[DEBUG]Length of key: %zu\n", key_len);
             // between i and equal sign is the value
-            size_t val_len = i-equal_pos;
+            size_t val_len = i-equal_pos + 1;
+            printf("[DEBUG]Length of value: %zu\n", val_len);
             // allocating space for both the key and value
             char *key = malloc(key_len+1);
-            char *val = malloc(val_len);
+            char *val = malloc(val_len+1);
             // introducing some index for the buffer
             j=0;
-            while(key_len+1){
+            size_t counter = *(&slash_indx);
+            while(counter < equal_pos){
                 key[j] = req[slash_indx];
                 *(&slash_indx)=slash_indx+1;
+                j++;
+                counter++;
             }
+            printf("[DEBUG]Slash pos:%zu\n", slash_indx);
+            key[key_len] = '\0';
             // reinit index
             j=0;
-            while(val_len+1){
-                val[j] = req[slash_indx];
-                *(&slash_indx)=slash_indx+1;
+            counter = equal_pos + 1;
+            while(counter < i){
+                val[j] = req[counter];
+                j++;
+                counter++;
             }
+            val[val_len] = '\0';
+            printf("[DEBUG]Slash pos:%zu\n", slash_indx);
+            printf("\t[DEBUG]key-value: (%s)(%s)\n", key, val);
             // checking key and pairing it to struct components
             // level
-            if(strcmp(key,keys[0])){
-                write_data(data.level, val_len);
-            }else if (strcmp(key,keys[1])) {
-                write_data(data.subtopic, val_len);
-            }else if (strcmp(key,keys[2])) {
-                write_data(data.subtopic, val_len);
-            }else if (strcmp(key,keys[3])) {
-                
+            if(strcmp(key,"level")==0){
+                write_data(&data.level, val_len, val);
+            }else if (strcmp(key,"topic")==0) {
+                write_data(&data.topic, val_len, val);
+            }else if (strcmp(key,"subtopic")==0) {
+                write_data(&data.subtopic, val_len, val);
+            }else if (strcmp(key,"val")==0) {
+                data.val = strtoll(val, &endptr,10);
                 // write_data(data.val, val_len);
             }else {
-                printf("Key does not exist\n");
+                printf("Key does not exist: (%s)\n", key);
                 exit(-1);
             }
+            slash_indx=i+1;
         }
     }      
-
     return data;
 }
 
@@ -198,7 +223,11 @@ void route(const char* req){
         free(d.level);
         // increment_prog(progress_dir, "basic",0);
     }else if (strcmp(command,"finished")==0) {
-        ;
+        question q = complete_question(req, c_indx,len_req);
+        printf("Question info:\n %s %s %s %zu\n", q.level, q.topic, q.subtopic, q.val);
+        free(q.subtopic);
+        free(q.level);
+        free(q.topic);
     }
     free(command);
 }
