@@ -34,6 +34,25 @@ char* compile_prog_dir(char* technique) {
     return dir;
 }
 
+char* compile_question_dir(char* topic, char* subtopic, char* level) {
+    char* ext = ".json";
+    size_t len_filename =  strlen(topic) + strlen(subtopic) +strlen(level) + strlen(ext) + 2;
+    char *filename = malloc(len_filename+ 1);
+    size_t len_dir =  strlen(topic) + strlen(subtopic) +strlen(level) + strlen(questions_dir) + strlen(ext);
+    char* dir = malloc(len_dir+1);
+    strcpy(filename, topic);
+    strcat(filename, "/");
+    strcat(filename, level);
+    strcat(filename,"/");
+    strcat(filename, subtopic);
+    strcat(filename, ext);
+    filename[len_filename] = '\0';
+    strcpy(dir, questions_dir);
+    strcat(dir, filename);
+    dir[len_dir] = '\0';
+    return dir;
+}
+
 
 // does the work of writing the buffer and associating it to whatever struct component necessary 
 //  ! NOTE: ONLY FOR STRINGS
@@ -224,7 +243,9 @@ void route(const char* req){
         // increment_prog(progress_dir, "basic",0);
     }else if (strcmp(command,"finished")==0) {
         question q = complete_question(req, c_indx,len_req);
-        printf("Question info:\n %s %s %s %zu\n", q.level, q.topic, q.subtopic, q.val);
+        // printf("Question info:\n %s %s %s %zu\n", q.level, q.topic, q.subtopic, q.val);
+        char* directory = compile_question_dir(q.topic,q.subtopic,q.level);
+        printf("Question dir: %s\n",directory);
         free(q.subtopic);
         free(q.level);
         free(q.topic);
